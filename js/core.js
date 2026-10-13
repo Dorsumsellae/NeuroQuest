@@ -163,7 +163,7 @@
   // ---------- Sons : délégués à js/audio.js (NQ.audio), chargé après ce fichier ----------
   NQ.beep = function (f, d, type) { if (NQ.audio) NQ.audio.note(f, d || 0.12, type); };
   NQ.sfx = {
-    good() { if (NQ.audio) NQ.audio.sfx.good(); },
+    good(mult) { if (NQ.audio) NQ.audio.sfx.good(mult); },
     bad() { if (NQ.audio) NQ.audio.sfx.bad(); }
   };
 })();

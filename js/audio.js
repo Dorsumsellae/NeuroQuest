@@ -41,7 +41,27 @@ NQ.audio = (function () {
     } catch (e) { /* audio indisponible */ }
   }
   const sfx = {
-    good() { const ac = ctx(); if (!ac) return; const t = ac.currentTime; note(660, 0.12, 'square', t); note(880, 0.16, 'square', t + 0.1); },
+    // Réussite : petit carillon cristallin (arpège majeur rapide + cloche sur la dernière note).
+    // Monte d'un ton par palier de série (mult 1 à 3) pour récompenser l'enchaînement.
+    good(mult) {
+      const ac = ctx(); if (!ac || prof().muted) return;
+      const t = ac.currentTime, shift = Math.pow(2, ((mult || 1) - 1) * 2 / 12);
+      const arp = [523.25, 659.25, 783.99, 1046.5]; // C5 E5 G5 C6
+      arp.forEach((f, i) => { note(f * shift, i === 3 ? 0.35 : 0.11, 'triangle', t + i * 0.055, 0.045); });
+      // cloche : fondamentale + partiels inharmoniques courts, enveloppe longue
+      [[1, 0.05, 0.7], [2.76, 0.018, 0.35], [5.4, 0.008, 0.2]].forEach(([k, v, d]) => {
+        note(1046.5 * shift * k, d, 'sine', t + 0.165, v);
+      });
+      // scintillement : bruit très court filtré haut
+      try {
+        const len = Math.floor(ac.sampleRate * 0.12), buf = ac.createBuffer(1, len, ac.sampleRate), d = buf.getChannelData(0);
+        for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+        const src = ac.createBufferSource(), flt = ac.createBiquadFilter(), g = ac.createGain();
+        src.buffer = buf; flt.type = 'highpass'; flt.frequency.value = 6000; g.gain.value = 0.02;
+        src.connect(flt); flt.connect(g); g.connect(master); src.start(t + 0.165); src.stop(t + 0.3);
+        src.onended = () => { src.disconnect(); flt.disconnect(); g.disconnect(); };
+      } catch (e) { /* ignore */ }
+    },
     bad() { const ac = ctx(); if (!ac) return; note(120, 0.3, 'sawtooth', ac.currentTime, 0.045); vibrate([60, 40, 120]); },
     unlock() { const ac = ctx(); if (!ac) return; const t = ac.currentTime; [523, 659, 784, 1047].forEach((f, i) => note(f, 0.18, 'triangle', t + i * 0.09, 0.05)); },
     // Souffle d'accélération : bruit filtré dont la fréquence de coupure monte tant que le boost est maintenu.

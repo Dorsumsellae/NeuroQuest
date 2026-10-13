@@ -170,7 +170,7 @@
       gainXp = NQ.prog.xpFor({ kind: room ? 'room' : 'gate', diff: item.diff, difficulty: S.ed, streak: S.streak });
       p.xp += gainXp; S.xp += gainXp;
       if (!room) S.speed = Math.min(S.speed + S.D.inc, S.D.max);
-      NQ.sfx.good();
+      NQ.sfx.good(mult);
     } else {
       S.streak = 0;
       if (S.cfg.mode !== 'flash') {

@@ -1,213 +1,24 @@
 // Micro-leçons du chapitre 2 (neurones, MLP, Keras, code).
 window.NQ = window.NQ || {}; window.NQ.lessons = window.NQ.lessons || {};
 Object.assign(window.NQ.lessons, {
-"nn.types_ml": {
-  "title": "Les grandes façons d'apprendre",
-  "p": [
-    "Le machine learning, c'est donner des exemples à un modèle pour qu'il apprenne une tâche, puis lui demander de décider sur un nouvel exemple.",
-    "Supervisé : on fournit les données ET la bonne réponse (l'annotation, ou label), comme un élève qui a le corrigé.",
-    "Non supervisé : on fournit les données seules, et le modèle découvre leur structure tout seul (c'est le cas de l'autoencodeur).",
-    "Par renforcement : un agent agit dans un environnement et apprend, par essais et récompenses, les meilleures actions.",
-    "À côté, la data science analyse des données pour en tirer des informations (statistiques), et l'IA générative produit du texte ou des images à partir d'un prompt."
-  ],
-  "ex": "Photos de vêtements + le nom de chaque vêtement = supervisé. Photos seules à compresser puis reconstruire = non supervisé. Un robot qui apprend à marcher en étant récompensé = renforcement.",
-  "tip": "Supervisé = données + annotations ; non supervisé = données seules ; renforcement = agent + environnement."
-},
-"nn.train_infer": {
-  "title": "Apprendre d'abord, répondre ensuite",
-  "p": [
-    "Une IA se déploie en deux temps, comme un étudiant qui révise puis passe l'examen.",
-    "Apprentissage : le modèle ajuste ses poids sur les données d'entraînement pour réussir la tâche.",
-    "Inférence : le modèle entraîné, figé, reçoit une nouvelle donnée et donne sa réponse.",
-    "Condition indispensable : la donnée d'inférence doit avoir le même format qu'à l'entraînement, c'est-à-dire mêmes dimensions et même normalisation."
-  ],
-  "ex": "Le modèle a appris sur des images divisées par 255 et de forme (N, 28, 28, 1). Pour prédire UNE image, on fait aussi image / 255 puis image.reshape(1, 28, 28, 1), où le 1 du début signifie une seule image.",
-  "tip": "À l'examen, oublier le /255 ou le reshape à l'inférence est un bug classique : les prédictions deviennent fausses ou le code plante."
-},
-"nn.poids_signe": {
-  "title": "Le signe d'un poids : accélérateur ou frein",
-  "p": [
-    "Dans un neurone, chaque entrée xᵢ est multipliée par un poids wᵢ avant d'être additionnée : a = Σ xᵢwᵢ − θ.",
-    "Si wᵢ est positif, plus l'entrée est grande, plus la somme a monte : l'entrée pousse le neurone à s'activer. On parle d'excitation.",
-    "Si wᵢ est négatif, l'entrée fait baisser la somme : elle empêche le neurone de s'activer. On parle d'inhibition.",
-    "La valeur absolue du poids dit à quel point l'entrée compte, comme la force d'une connexion entre deux neurones biologiques."
-  ],
-  "ex": "Entrée x = 4. Avec w = 0.2, elle ajoute +0.8 à la somme (excitation). Avec w = −0.2, elle retire 0.8 (inhibition).",
-  "svg": "neurone",
-  "tip": "Poids négatif = inhibition, poids positif = excitation ; le seuil, lui, c'est θ."
-},
-"nn.lien_regression": {
-  "title": "Un neurone seul fait une régression",
-  "p": [
-    "Enlevez la fonction d'activation d'un neurone : il ne reste que la somme pondérée des entrées plus un biais.",
-    "Ce calcul, w·x + b, est exactement la formule d'une régression linéaire (la droite m·x + b du notebook one_neuron_regression).",
-    "On l'entraîne de la même façon : on mesure l'erreur avec la MSE et on corrige w et b par descente de gradient.",
-    "Changer l'optimiseur (SGD, Adam) ou le learning rate change la vitesse et la stabilité de l'apprentissage, ce qu'on voit en traçant la loss au fil des epochs."
-  ],
-  "ex": "En PyTorch : nn.Linear(1, 1) calcule y = w·x + b avec 2 paramètres (w et b). Entraîné sur la MSE, il retrouve la droite qui colle le mieux aux points.",
-  "svg": "droite",
-  "tip": "Neurone sans activation (activation identité) = régression linéaire ; cela n'a rien à voir avec le nombre de couches ou avec softmax."
-},
-"nn.backprop": {
-  "title": "Corriger les poids en remontant l'erreur",
-  "p": [
-    "Pour apprendre, un réseau doit savoir de combien chaque poids est responsable de son erreur.",
-    "Passe avant (forward) : on donne des exemples annotés, le réseau calcule ses sorties, et on mesure l'écart avec les bonnes réponses (la perte).",
-    "Passe arrière (backward) : on fait remonter le gradient de cette erreur de la dernière couche vers la première, grâce à la règle de dérivation en chaîne. C'est la backpropagation.",
-    "On met alors à jour tous les poids avec w ← w − η·∇ (η = learning rate, ∇ = gradient de l'erreur par rapport au poids), puis on recommence sur le lot suivant et sur plusieurs epochs."
-  ],
-  "ex": "Le réseau sort (0.25, 0.79) alors que la cible est (1, 0) : l'erreur est rétropropagée pour que, au prochain passage, la première sortie monte et la seconde baisse.",
-  "svg": "backprop",
-  "tip": "Ordre d'une itération : forward, calcul de la perte, backward, mise à jour des poids ; TensorFlow ou PyTorch calculent les dérivées automatiquement."
-},
-"nn.keras_pipeline": {
-  "title": "Construire un réseau avec Keras",
-  "p": [
-    "Keras permet d'empiler des couches comme des briques : c'est le rôle de keras.Sequential([...]).",
-    "Input(shape=(28, 28)) annonce la taille d'UNE image d'entrée : 28 × 28 pixels.",
-    "Flatten() aplatit cette grille 2D en une seule ligne de 28 × 28 = 784 nombres, car une couche dense attend un vecteur.",
-    "Dense(128, activation='relu') est une couche cachée de 128 neurones, chacun relié à toutes les entrées (fully connected). Dense(10, activation='softmax') est la sortie : un neurone par classe."
-  ],
-  "ex": "keras.Sequential([Input(shape=(28, 28)), Flatten(), Dense(128, activation='relu'), Dense(10, activation='softmax')]) : image 28×28 → 784 valeurs → 128 neurones → 10 probabilités (une par type de vêtement).",
-  "svg": "mlp",
-  "tip": "Flatten ne réduit pas l'image et ne normalise rien : il change seulement sa forme, de (28, 28) à (784,)."
-},
-"nn.params": {
-  "title": "Compter les paramètres d'une couche Dense",
-  "p": [
-    "Les paramètres sont les nombres que le réseau apprend : les poids et les biais.",
-    "Dans une couche Dense, chaque neurone a un poids par entrée, plus un biais à lui.",
-    "D'où la règle : paramètres = entrées × neurones + neurones.",
-    "Flatten, Dropout ou MaxPool n'ont aucun paramètre : ils transforment les données sans rien apprendre."
-  ],
-  "ex": "Dense(128) après 784 entrées : 784 × 128 + 128 = 100 480. Puis Dense(10) : 128 × 10 + 10 = 1 290. Total du MLP : 101 770.",
-  "svg": "mlp",
-  "tip": "Piège classique : oublier les biais (784 × 128 = 100 352 est faux) ou additionner au lieu de multiplier."
-},
-"nn.normalisation": {
-  "title": "Ramener les pixels entre 0 et 1",
-  "p": [
-    "Un pixel en niveaux de gris vaut entre 0 (noir) et 255 (blanc).",
-    "Des entrées aussi grandes produisent de très grands gradients et un apprentissage instable.",
-    "Normaliser, c'est remettre les valeurs sur une petite échelle commune : ici, on divise par 255 pour obtenir des nombres entre 0 et 1.",
-    "On applique exactement le même traitement au train, au test et à toute image présentée plus tard au modèle."
-  ],
-  "ex": "train_images = train_images / 255.0 et test_images = test_images / 255.0. Un pixel à 204 devient 0.8. La taille de l'image ne change pas.",
-  "tip": "La normalisation touche les pixels, pas les labels, et ne change pas les dimensions ; oubliée sur le test ou à l'inférence, elle fausse les prédictions."
-},
-"nn.activation": {
-  "title": "Les fonctions d'activation",
-  "p": [
-    "Après sa somme pondérée a, un neurone passe le résultat dans une fonction d'activation qui décide de sa sortie.",
-    "Sans elle, empiler des couches ne servirait à rien : tout reviendrait à une seule transformation linéaire.",
-    "ReLU = max(0, a) : garde le positif, met le négatif à 0 ; c'est le choix courant dans les couches cachées. Sigmoïde = 1/(1+e⁻ᵃ), entre 0 et 1, utile pour une probabilité.",
-    "tanh donne une valeur entre −1 et 1. L'échelon (0 ou 1) est, avec la sigmoïde, le choix du neurone formel du cours ; en pratique on lui préfère des fonctions dérivables, car sa dérivée est nulle presque partout et la backpropagation ne peut pas passer."
-  ],
-  "ex": "Pour a = 2.0 : échelon → 1, sigmoïde → 1/(1+e⁻²) ≈ 0.88, tanh → 0.96, ReLU → 2. Pour a = −3 : ReLU → 0.",
-  "svg": "neurone",
-  "tip": "ReLU en couches cachées, softmax en sortie de classification multi-classes, aucune activation (linéaire) en sortie d'une régression."
-},
-"nn.softmax": {
-  "title": "Softmax : des scores aux probabilités",
-  "p": [
-    "En sortie d'un classifieur, on veut une probabilité par classe pour pouvoir dire « c'est sûrement un pantalon ».",
-    "Softmax transforme les scores bruts des neurones de sortie en nombres positifs dont la somme fait exactement 1.",
-    "Formule : pour la classe i, eᵃⁱ / Σⱼ eᵃʲ, c'est-à-dire l'exponentielle de son score divisée par la somme des exponentielles de tous les scores.",
-    "La sigmoïde, elle, traite chaque neurone séparément : ses sorties ne somment pas à 1 et se comparent mal entre classes."
-  ],
-  "ex": "Dense(10, activation='softmax') sort par exemple [0.01, 0.90, 0.02, …] : 10 probabilités qui somment à 1 ; np.argmax donne la classe 1.",
-  "tip": "Softmax en sortie de classification ; jamais en sortie d'une régression, où il faut une sortie linéaire."
-},
-"nn.compile_fit": {
-  "title": "compile, fit, evaluate, predict",
-  "p": [
-    "Une fois le modèle construit, Keras enchaîne quatre étapes : régler la machine, la faire tourner, la noter, puis s'en servir.",
-    "model.compile(optimizer=..., loss=..., metrics=['accuracy']) choisit l'optimiseur (ex. Adam et son learning rate), l'erreur à minimiser et ce qu'on affiche.",
-    "model.fit(x, y, epochs=10) entraîne le modèle ; les epochs et la taille des batchs se règlent ici, pas dans compile.",
-    "model.evaluate(x_test, y_test) renvoie la loss et l'accuracy ; model.predict(x_test) renvoie les probabilités, et np.argmax(...) donne l'indice de la classe la plus probable."
-  ],
-  "ex": "predictions = model.predict(test_images) a la forme (10000, 10) : 10 probabilités par image. np.argmax(predictions[0]) renvoie par exemple 9, à comparer à test_labels[0].",
-  "tip": "argmax renvoie la position du maximum (la classe), pas la probabilité elle-même ; c'est np.max qui donnerait la probabilité."
-},
-"nn.loss_choice": {
-  "title": "Choisir la bonne fonction de perte",
-  "p": [
-    "La loss (perte) est le nombre que l'entraînement cherche à faire baisser : c'est elle qu'on dérive pour corriger les poids.",
-    "Les métriques, comme l'accuracy (taux de bonnes réponses), sont seulement affichées pour suivre les progrès ; elles ne guident pas l'apprentissage.",
-    "En classification on utilise la crossentropy : sparse_categorical_crossentropy si les labels sont des entiers (0 à 9), categorical_crossentropy s'ils sont en one-hot.",
-    "Pour une régression (prédire une valeur continue), on prend la MSE ou la MAE."
-  ],
-  "ex": "Fashion-MNIST : labels entiers comme 3 → SparseCategoricalCrossentropy. CNN ASL : y = to_categorical(y, 24) donne des vecteurs one-hot → categorical_crossentropy.",
-  "tip": "Le choix sparse / categorical dépend uniquement du format des labels, pas du nombre de classes ni du type d'image."
-},
-"nn.epoch_lr": {
-  "title": "Epoch, batch et learning rate",
-  "p": [
-    "Une epoch, c'est un passage complet sur toutes les images d'entraînement, comme relire tout le cours une fois.",
-    "Les images ne passent pas toutes d'un coup : on les groupe en batchs (32 par défaut), et les poids sont mis à jour après chaque batch.",
-    "Le learning rate est la vitesse d'apprentissage : la taille du pas fait à chaque mise à jour. Trop grand, la loss remonte ou explose ; trop petit, elle stagne."
-  ],
-  "ex": "60 000 images, batch_size = 32 : 60 000 / 32 = 1 875 mises à jour par epoch. Sur 10 epochs : 18 750 mises à jour.",
-  "svg": "sgd",
-  "tip": "Nombre de mises à jour = (N / batch_size) × epochs ; le learning rate n'est ni une taille de batch ni un taux de dropout."
-},
-"nn.onehot": {
-  "title": "L'encodage one-hot des labels",
-  "p": [
-    "Un label de classe est souvent un simple entier : 0 = rouge, 1 = vert, etc.",
-    "L'encodage one-hot le remplace par un vecteur rempli de 0, avec un seul 1 placé à la position de la classe.",
-    "Ce format a la même forme que la sortie softmax (une case par classe), ce qui permet de les comparer directement.",
-    "En Keras : keras.utils.to_categorical(y, num_classes), où num_classes est le nombre de classes."
-  ],
-  "ex": "Avec 4 couleurs : Rouge = [1, 0, 0, 0], Vert = [0, 1, 0, 0]. to_categorical(2, 4) donne [0, 0, 1, 0].",
-  "svg": "onehot",
-  "tip": "Labels one-hot → categorical_crossentropy ; labels entiers → sparse_categorical_crossentropy."
-},
-"nn.validation": {
-  "title": "L'ensemble de validation, détecteur de par cœur",
-  "p": [
-    "Un modèle peut réciter parfaitement ses exemples d'entraînement sans savoir traiter de nouvelles images : c'est le sur-apprentissage.",
-    "Pour le repérer, on garde de côté des données qui ne servent pas à corriger les poids : l'ensemble de validation.",
-    "À chaque epoch, on mesure la loss et l'accuracy sur ces données pour vérifier que le modèle généralise.",
-    "En Keras : model.fit(x, y, epochs=10, validation_split=0.1) ou validation_data=(x_val, y_val)."
-  ],
-  "ex": "Epoch après epoch, loss du train : 0.50 → 0.20 → 0.05, mais loss de validation : 0.55 → 0.40 → 0.60. Elle remonte : le modèle mémorise le train.",
-  "tip": "Loss de train qui baisse et loss de validation qui remonte = sur-apprentissage ; remèdes : dropout, augmentation de données, moins d'epochs."
-},
-"code.fit_transform": {
-  "title": "fit, transform et reshape(-1, 1)",
-  "p": [
-    "Un outil de prétraitement comme StandardScaler fonctionne en deux temps : fit apprend des paramètres sur les données (moyenne μ, écart-type σ), transform les applique : (x − μ) / σ.",
-    "fit_transform fait les deux d'un coup : on l'utilise sur le train uniquement.",
-    "Sur le test, on appelle seulement transform, pour réutiliser la moyenne et l'écart-type du train. Refaire un fit sur le test changerait la transformation et ferait fuiter de l'information du test. Exception sans conséquence : PolynomialFeatures n'apprend aucune statistique, d'où le fit_transform sur X_test du slide 22 des régressions.",
-    "Autre réflexe : X.reshape(-1, 1) transforme un vecteur 1D en colonne de forme (n, 1) ; le −1 veut dire « calcule toi-même cette dimension ». scikit-learn exige un X en 2D."
-  ],
-  "ex": "scaler = StandardScaler(); x_train = scaler.fit_transform(x_train); x_test = scaler.transform(x_test). Et np.array([1, 2, 3]).reshape(-1, 1) donne une colonne de forme (3, 1).",
-  "tip": "fit_transform sur le train, transform seul sur le test : appeler fit sur le test est un piège d'examen."
-},
-"code.pytorch": {
-  "title": "La boucle d'entraînement PyTorch",
-  "p": [
-    "Contrairement à Keras et son fit, PyTorch demande d'écrire soi-même la boucle d'apprentissage, lot par lot.",
-    "output = model(x) fait la passe avant ; optimizer.zero_grad() remet les gradients à zéro, sinon ils s'additionnent d'un tour à l'autre.",
-    "batch_loss = loss_function(output, y) calcule l'erreur ; batch_loss.backward() calcule les gradients (backpropagation) ; optimizer.step() met à jour les poids avec ces gradients.",
-    "Pour prédire ensuite, on entoure le code de with torch.no_grad() : pas de graphe de dérivation, donc moins de mémoire."
-  ],
-  "ex": "for x, y in train_loader: output = model(x); optimizer.zero_grad(); batch_loss = loss_function(output, y); batch_loss.backward(); optimizer.step()",
-  "svg": "backprop",
-  "tip": "Ordre : forward → zero_grad → loss → backward → step. Avec step avant backward, ou zero_grad entre backward et step, le modèle n'apprend plus."
-},
-"code.pieges": {
-  "title": "Les pièges à repérer dans un code",
-  "p": [
-    "À l'examen, on vous montre souvent un code avec une seule ligne fausse : il faut savoir où regarder.",
-    "Données : normalisation différente entre train et test, fit_transform sur le test, reshape oublié (un CNN attend (N, 28, 28, 1)).",
-    "Loss : categorical_crossentropy avec des labels entiers (il faut sparse), ou mse pour une classification.",
-    "Sortie : activation relu au lieu de softmax pour une classification, softmax pour une régression, ou nombre de neurones de sortie différent du nombre de classes."
-  ],
-  "ex": "Classification en 24 lettres : model.add(Dense(24, activation='relu')) en dernière couche est faux, il faut Dense(24, activation='softmax').",
-  "tip": "Réflexe en 3 questions : les données ont-elles le même format partout ? la loss correspond-elle aux labels ? la couche de sortie correspond-elle à la tâche ?"
-}
+"nn.types_ml": {"title":"Les grandes façons d'apprendre","p":["Le machine learning, c'est donner des exemples à un modèle pour qu'il apprenne une tâche, puis lui demander de décider sur un nouvel exemple.","Supervisé : on fournit les données ET la bonne réponse (l'annotation, ou label), comme un élève qui a le corrigé.","Non supervisé : on fournit les données seules, et le modèle découvre leur structure tout seul (c'est le cas de l'autoencodeur).","Par renforcement : un agent agit dans un environnement et apprend, par essais et récompenses, les meilleures actions.","À côté, la data science analyse des données pour en tirer des informations (statistiques), et l'IA générative produit du texte ou des images à partir d'un prompt."],"ex":"Photos de vêtements + le nom de chaque vêtement = supervisé. Photos seules à compresser puis reconstruire = non supervisé. Un robot qui apprend à marcher en étant récompensé = renforcement.","tip":"Supervisé = données + annotations ; non supervisé = données seules ; renforcement = agent + environnement."},
+"nn.train_infer": {"title":"Apprendre d'abord, répondre ensuite","p":["Une IA se déploie en deux temps, comme un étudiant qui révise puis passe l'examen.","Apprentissage : le modèle ajuste ses poids sur les données d'entraînement pour réussir la tâche.","Inférence : le modèle entraîné, figé, reçoit une nouvelle donnée et donne sa réponse.","Condition indispensable : la donnée d'inférence doit avoir le même format qu'à l'entraînement, c'est-à-dire mêmes dimensions et même normalisation."],"ex":"Le modèle a appris sur des images divisées par 255 et de forme (N, 28, 28, 1). Pour prédire UNE image, on fait aussi image / 255 puis image.reshape(1, 28, 28, 1), où le 1 du début signifie une seule image.","tip":"À l'examen, oublier le /255 ou le reshape à l'inférence est un bug classique : les prédictions deviennent fausses ou le code plante."},
+"nn.poids_signe": {"title":"Le signe d'un poids : accélérateur ou frein","p":["Dans un neurone, chaque entrée xᵢ est multipliée par un poids wᵢ avant d'être additionnée : a = Σ xᵢwᵢ − θ.","Si wᵢ est positif, plus l'entrée est grande, plus la somme a monte : l'entrée pousse le neurone à s'activer. On parle d'excitation.","Si wᵢ est négatif, l'entrée fait baisser la somme : elle empêche le neurone de s'activer. On parle d'inhibition.","La valeur absolue du poids dit à quel point l'entrée compte, comme la force d'une connexion entre deux neurones biologiques."],"ex":"Entrée x = 4. Avec w = 0.2, elle ajoute +0.8 à la somme (excitation). Avec w = −0.2, elle retire 0.8 (inhibition).","svg":"neurone","tip":"Poids négatif = inhibition, poids positif = excitation ; le seuil, lui, c'est θ."},
+"nn.lien_regression": {"title":"Un neurone seul fait une régression","p":["Enlevez la fonction d'activation d'un neurone : il ne reste que la somme pondérée des entrées plus un biais.","Ce calcul, w·x + b, est exactement la formule d'une régression linéaire (la droite m·x + b du notebook one_neuron_regression).","On l'entraîne de la même façon : on mesure l'erreur avec la MSE et on corrige w et b par descente de gradient.","Changer l'optimiseur (SGD, Adam) ou le learning rate change la vitesse et la stabilité de l'apprentissage, ce qu'on voit en traçant la loss au fil des epochs."],"ex":"En PyTorch : nn.Linear(1, 1) calcule y = w·x + b avec 2 paramètres (w et b). Entraîné sur la MSE, il retrouve la droite qui colle le mieux aux points.","svg":"droite","tip":"Neurone sans activation (activation identité) = régression linéaire ; cela n'a rien à voir avec le nombre de couches ou avec softmax."},
+"nn.backprop": {"title":"Corriger les poids en remontant l'erreur","p":["Pour apprendre, un réseau doit savoir de combien chaque poids est responsable de son erreur.","Passe avant (forward) : on donne des exemples annotés, le réseau calcule ses sorties, et on mesure l'écart avec les bonnes réponses (la perte).","Passe arrière (backward) : on fait remonter le gradient de cette erreur de la dernière couche vers la première, grâce à la règle de dérivation en chaîne. C'est la backpropagation.","On met alors à jour tous les poids avec w ← w − η·∇ (η = learning rate, ∇ = gradient de l'erreur par rapport au poids), puis on recommence sur le lot suivant et sur plusieurs epochs."],"ex":"Le réseau sort (0.25, 0.79) alors que la cible est (1, 0) : l'erreur est rétropropagée pour que, au prochain passage, la première sortie monte et la seconde baisse.","svg":"backprop","tip":"Ordre d'une itération : forward, calcul de la perte, backward, mise à jour des poids ; TensorFlow ou PyTorch calculent les dérivées automatiquement."},
+"nn.keras_pipeline": {"title":"Construire un réseau avec Keras","p":["Keras permet d'empiler des couches comme des briques : c'est le rôle de keras.Sequential([...]).","Input(shape=(28, 28)) annonce la taille d'UNE image d'entrée : 28 × 28 pixels.","Flatten() aplatit cette grille 2D en une seule ligne de 28 × 28 = 784 nombres, car une couche dense attend un vecteur.","Dense(128, activation='relu') est une couche cachée de 128 neurones, chacun relié à toutes les entrées (fully connected). Dense(10, activation='softmax') est la sortie : un neurone par classe."],"ex":"keras.Sequential([Input(shape=(28, 28)), Flatten(), Dense(128, activation='relu'), Dense(10, activation='softmax')]) : image 28×28 → 784 valeurs → 128 neurones → 10 probabilités (une par type de vêtement).","svg":"mlp","tip":"Flatten ne réduit pas l'image et ne normalise rien : il change seulement sa forme, de (28, 28) à (784,)."},
+"nn.params": {"title":"Compter les paramètres d'une couche Dense","p":["Les paramètres sont les nombres que le réseau apprend : les poids et les biais.","Dans une couche Dense, chaque neurone a un poids par entrée, plus un biais à lui.","D'où la règle : paramètres = entrées × neurones + neurones.","Flatten, Dropout ou MaxPool n'ont aucun paramètre : ils transforment les données sans rien apprendre."],"ex":"Dense(128) après 784 entrées : 784 × 128 + 128 = 100 480. Puis Dense(10) : 128 × 10 + 10 = 1 290. Total du MLP : 101 770.","svg":"mlp","tip":"Piège classique : oublier les biais (784 × 128 = 100 352 est faux) ou additionner au lieu de multiplier."},
+"nn.normalisation": {"title":"Ramener les pixels entre 0 et 1","p":["Un pixel en niveaux de gris vaut entre 0 (noir) et 255 (blanc).","Des entrées aussi grandes produisent de très grands gradients et un apprentissage instable.","Normaliser, c'est remettre les valeurs sur une petite échelle commune : ici, on divise par 255 pour obtenir des nombres entre 0 et 1.","On applique exactement le même traitement au train, au test et à toute image présentée plus tard au modèle."],"ex":"train_images = train_images / 255.0 et test_images = test_images / 255.0. Un pixel à 204 devient 0.8. La taille de l'image ne change pas.","tip":"La normalisation touche les pixels, pas les labels, et ne change pas les dimensions ; oubliée sur le test ou à l'inférence, elle fausse les prédictions."},
+"nn.activation": {"title":"Les fonctions d'activation","p":["Après sa somme pondérée a, un neurone passe le résultat dans une fonction d'activation qui décide de sa sortie.","Sans elle, empiler des couches ne servirait à rien : tout reviendrait à une seule transformation linéaire.","ReLU = max(0, a) : garde le positif, met le négatif à 0 ; c'est le choix courant dans les couches cachées. Sigmoïde = 1/(1+e⁻ᵃ), entre 0 et 1, utile pour une probabilité.","tanh donne une valeur entre −1 et 1. L'échelon (0 ou 1) est, avec la sigmoïde, le choix du neurone formel du cours ; en pratique on lui préfère des fonctions dérivables, car sa dérivée est nulle presque partout et la backpropagation ne peut pas passer."],"ex":"Pour a = 2.0 : échelon → 1, sigmoïde → 1/(1+e⁻²) ≈ 0.88, tanh → 0.96, ReLU → 2. Pour a = −3 : ReLU → 0.","svg":"neurone","tip":"ReLU en couches cachées, softmax en sortie de classification multi-classes, aucune activation (linéaire) en sortie d'une régression."},
+"nn.softmax": {"title":"Softmax : des scores aux probabilités","p":["En sortie d'un classifieur, on veut une probabilité par classe pour pouvoir dire « c'est sûrement un pantalon ».","Softmax transforme les scores bruts des neurones de sortie en nombres positifs dont la somme fait exactement 1.","Formule : pour la classe i, eᵃⁱ / Σⱼ eᵃʲ, c'est-à-dire l'exponentielle de son score divisée par la somme des exponentielles de tous les scores.","La sigmoïde, elle, traite chaque neurone séparément : ses sorties ne somment pas à 1 et se comparent mal entre classes."],"ex":"Dense(10, activation='softmax') sort par exemple [0.01, 0.90, 0.02, …] : 10 probabilités qui somment à 1 ; np.argmax donne la classe 1.","tip":"Softmax en sortie de classification ; jamais en sortie d'une régression, où il faut une sortie linéaire."},
+"nn.compile_fit": {"title":"compile, fit, evaluate, predict","p":["Une fois le modèle construit, Keras enchaîne quatre étapes : régler la machine, la faire tourner, la noter, puis s'en servir.","model.compile(optimizer=..., loss=..., metrics=['accuracy']) choisit l'optimiseur (ex. Adam et son learning rate), l'erreur à minimiser et ce qu'on affiche.","model.fit(x, y, epochs=10) entraîne le modèle ; les epochs et la taille des batchs se règlent ici, pas dans compile.","model.evaluate(x_test, y_test) renvoie la loss et l'accuracy ; model.predict(x_test) renvoie les probabilités, et np.argmax(...) donne l'indice de la classe la plus probable."],"ex":"predictions = model.predict(test_images) a la forme (10000, 10) : 10 probabilités par image. np.argmax(predictions[0]) renvoie par exemple 9, à comparer à test_labels[0].","tip":"argmax renvoie la position du maximum (la classe), pas la probabilité elle-même ; c'est np.max qui donnerait la probabilité."},
+"nn.loss_choice": {"title":"Choisir la bonne fonction de perte","p":["La loss (perte) est le nombre que l'entraînement cherche à faire baisser : c'est elle qu'on dérive pour corriger les poids.","Les métriques, comme l'accuracy (taux de bonnes réponses), sont seulement affichées pour suivre les progrès ; elles ne guident pas l'apprentissage.","En classification on utilise la crossentropy : sparse_categorical_crossentropy si les labels sont des entiers (0 à 9), categorical_crossentropy s'ils sont en one-hot.","Pour une régression (prédire une valeur continue), on prend la MSE ou la MAE."],"ex":"Fashion-MNIST : labels entiers comme 3 → SparseCategoricalCrossentropy. CNN ASL : y = to_categorical(y, 24) donne des vecteurs one-hot → categorical_crossentropy.","tip":"Le choix sparse / categorical dépend uniquement du format des labels, pas du nombre de classes ni du type d'image."},
+"nn.epoch_lr": {"title":"Epoch, batch et learning rate","p":["Une epoch, c'est un passage complet sur toutes les images d'entraînement, comme relire tout le cours une fois.","Les images ne passent pas toutes d'un coup : on les groupe en batchs (32 par défaut), et les poids sont mis à jour après chaque batch.","Le learning rate est la vitesse d'apprentissage : la taille du pas fait à chaque mise à jour. Trop grand, la loss remonte ou explose ; trop petit, elle stagne."],"ex":"60 000 images, batch_size = 32 : 60 000 / 32 = 1 875 mises à jour par epoch. Sur 10 epochs : 18 750 mises à jour.","svg":"sgd","tip":"Nombre de mises à jour = (N / batch_size) × epochs ; le learning rate n'est ni une taille de batch ni un taux de dropout."},
+"nn.onehot": {"title":"L'encodage one-hot des labels","p":["Un label de classe est souvent un simple entier : 0 = rouge, 1 = vert, etc.","L'encodage one-hot le remplace par un vecteur rempli de 0, avec un seul 1 placé à la position de la classe.","Ce format a la même forme que la sortie softmax (une case par classe), ce qui permet de les comparer directement.","En Keras : keras.utils.to_categorical(y, num_classes), où num_classes est le nombre de classes."],"ex":"Avec 4 couleurs : Rouge = [1, 0, 0, 0], Vert = [0, 1, 0, 0]. to_categorical(2, 4) donne [0, 0, 1, 0].","svg":"onehot","tip":"Labels one-hot → categorical_crossentropy ; labels entiers → sparse_categorical_crossentropy."},
+"nn.validation": {"title":"L'ensemble de validation, détecteur de par cœur","p":["Un modèle peut réciter parfaitement ses exemples d'entraînement sans savoir traiter de nouvelles images : c'est le sur-apprentissage.","Pour le repérer, on garde de côté des données qui ne servent pas à corriger les poids : l'ensemble de validation.","À chaque epoch, on mesure la loss et l'accuracy sur ces données pour vérifier que le modèle généralise.","En Keras : model.fit(x, y, epochs=10, validation_split=0.1) ou validation_data=(x_val, y_val) ; les mesures faites sur la validation s'affichent avec le préfixe val_ (val_loss, val_accuracy), à côté de loss et accuracy pour l'entraînement."],"ex":"Epoch après epoch, loss du train : 0.50 → 0.20 → 0.05, mais loss de validation : 0.55 → 0.40 → 0.60. Elle remonte : le modèle mémorise le train.","tip":"Loss de train qui baisse et loss de validation qui remonte = sur-apprentissage ; remèdes : dropout, augmentation de données, moins d'epochs."},
+"code.fit_transform": {"title":"fit, transform et reshape(-1, 1)","p":["Un outil de prétraitement comme StandardScaler fonctionne en deux temps : fit apprend des paramètres sur les données (moyenne μ, écart-type σ), transform les applique : (x − μ) / σ.","fit_transform fait les deux d'un coup : on l'utilise sur le train uniquement.","Sur le test, on appelle seulement transform, pour réutiliser la moyenne et l'écart-type du train. Refaire un fit sur le test changerait la transformation et ferait fuiter de l'information du test. Exception sans conséquence : PolynomialFeatures n'apprend aucune statistique, d'où le fit_transform sur X_test du slide 22 des régressions.","Autre réflexe : X.reshape(-1, 1) transforme un vecteur 1D en colonne de forme (n, 1) ; le −1 veut dire « calcule toi-même cette dimension ». scikit-learn exige un X en 2D."],"ex":"scaler = StandardScaler(); x_train = scaler.fit_transform(x_train); x_test = scaler.transform(x_test). Et np.array([1, 2, 3]).reshape(-1, 1) donne une colonne de forme (3, 1).","tip":"fit_transform sur le train, transform seul sur le test : appeler fit sur le test est un piège d'examen."},
+"code.pytorch": {"title":"La boucle d'entraînement PyTorch","p":["Contrairement à Keras et son fit, PyTorch demande d'écrire soi-même la boucle d'apprentissage, lot par lot.","output = model(x) fait la passe avant ; optimizer.zero_grad() remet les gradients à zéro, sinon ils s'additionnent d'un tour à l'autre.","batch_loss = loss_function(output, y) calcule l'erreur ; batch_loss.backward() calcule les gradients (backpropagation) ; optimizer.step() met à jour les poids avec ces gradients.","Pour prédire ensuite, on entoure le code de with torch.no_grad() : pas de graphe de dérivation, donc moins de mémoire."],"ex":"for x, y in train_loader: output = model(x); optimizer.zero_grad(); batch_loss = loss_function(output, y); batch_loss.backward(); optimizer.step()","svg":"backprop","tip":"Ordre : forward → zero_grad → loss → backward → step. Avec step avant backward, ou zero_grad entre backward et step, le modèle n'apprend plus."},
+"code.pieges": {"title":"Les pièges à repérer dans un code","p":["À l'examen, on vous montre souvent un code avec une seule ligne fausse : il faut savoir où regarder.","Données : normalisation différente entre train et test, fit_transform sur le test, reshape oublié (un CNN attend (N, 28, 28, 1)).","Loss : categorical_crossentropy avec des labels entiers (il faut sparse), ou mse pour une classification.","Sortie : activation relu au lieu de softmax pour une classification, softmax pour une régression, ou nombre de neurones de sortie différent du nombre de classes.","Ces erreurs ne font pas forcément planter le code : il s'exécute, mais le modèle apprend mal ou prédit faux."],"ex":"Classification en 24 lettres : model.add(Dense(24, activation='relu')) en dernière couche est faux, il faut Dense(24, activation='softmax').","tip":"Réflexe en 3 questions : les données ont-elles le même format partout ? la loss correspond-elle aux labels ? la couche de sortie correspond-elle à la tâche ?"}
 });
 window.NQ.glossary = window.NQ.glossary || [];
 window.NQ.glossary.push(

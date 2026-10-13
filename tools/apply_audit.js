@@ -38,6 +38,7 @@ const parse = (line) => { const comma = line.endsWith(','); return { obj: JSON.p
 
 let ok = 0, bad = 0;
 for (const p of patches) {
+  if (p.action === 'lesson') continue; // traité par tools/apply_lessons.js
   if (skip.has(p.id)) { console.log('IGNORÉ  ' + p.id); continue; }
   const loc = find(p.id);
   if (!loc) { console.log('INTROUVABLE ' + p.id + ' (' + p.from + ')'); bad++; continue; }
@@ -62,6 +63,7 @@ for (const p of patches) {
   } else if (p.action === 'remove') {
     console.log('REMOVE  ' + p.id + ' : ' + (p.reason || ''));
     loc.F.lines[loc.i] = null; ok++; continue;
+  } else if (p.action === 'lesson') { continue; // traité par tools/apply_lessons.js
   } else { console.log('ACTION INCONNUE ' + JSON.stringify(p)); bad++; continue; }
   loc.F.lines[loc.i] = JSON.stringify(obj) + (comma ? ',' : '');
   ok++;

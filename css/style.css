@@ -1113,3 +1113,14 @@ body.boost #stage::after { opacity: 1; animation: speedlines .25s linear infinit
 /* ---- Explication « en clair » ---- */
 .plain { background: #0f2a1c; border-left: 3px solid #33ff99; border-radius: 6px; padding: 6px 10px; font-size: 1.05em; line-height: 1.5; }
 .plain b { color: #33ff99; }
+
+/* ---- Pseudo ---- */
+.name-row { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.name-row b { font-size: 18px; }
+.name-edit { margin: 0; }
+.name-edit.pulse { border-color: var(--gold); color: var(--gold); animation: namepulse 1.6s ease-in-out infinite; }
+@keyframes namepulse { 0%, 100% { box-shadow: 0 0 0 #ffd23f00; } 50% { box-shadow: 0 0 16px #ffd23f; } }
+.name-card { max-width: 420px; }
+.name-card h2 { margin: 0 0 6px; color: var(--gold); }
+.name-card .txt { width: 100%; box-sizing: border-box; font-size: 18px; padding: 10px 12px; margin: 8px 0 2px; text-align: center; }
+.name-card .row { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }

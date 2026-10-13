@@ -305,7 +305,12 @@
     p.stats.games++;
     if (c.mode !== 'flash' && c.mode !== 'campaign') {
       p.stats.best = Math.max(p.stats.best, S.score);
-      NQ.leaderboard.submit({ name: p.name, score: S.score, difficulty: S.ed, chapter: c.chapter, date: new Date().toISOString().slice(0, 10) });
+      const entry = { score: S.score, difficulty: S.ed, chapter: c.chapter, date: new Date().toISOString().slice(0, 10) };
+      const submit = () => NQ.leaderboard.submit(Object.assign({ name: p.name }, entry));
+      // Sans pseudo, on le demande avant d'envoyer le score au classement (après l'affichage du bilan)
+      if (!UI.hasName() && S.score > 0) {
+        setTimeout(() => UI.askName({ title: '🏆 Ton score : ' + S.score, msg: 'Choisis un pseudo pour qu\'il apparaisse à ton nom dans le classement de la promo.', later: 'Rester « Joueur »' }).then(submit), 400);
+      } else submit();
     }
     NQ.store.save();
     const before = {}; S.unlockedBefore.forEach((i) => { before[i] = true; });
@@ -418,6 +423,8 @@
     bindInputs();
     UILesson.bindGlossary();
     UI.showMenu();
+    // Premier lancement : invitation à choisir un pseudo
+    if (!UI.hasName()) setTimeout(() => UI.askName().then(() => UI.showMenu()), 500);
     requestAnimationFrame(loop);
   }
   init();

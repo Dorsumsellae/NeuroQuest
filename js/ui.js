@@ -43,6 +43,37 @@ window.UI = (function () {
   function showFrame(title, content, opts) { return openScreen(frame(title, content, opts), opts); }
 
   // ---------- Dialogue de confirmation (jamais window.confirm) ----------
+  // ---------- Pseudo ----------
+  const DEFAULT_NAME = 'Joueur';
+  const hasName = () => { const n = (NQ.store.profile.name || '').trim(); return n && n !== DEFAULT_NAME; };
+  // Dialogue de saisie du pseudo. Résout avec le nom enregistré (ou null si « Plus tard »).
+  function askName(opts) {
+    opts = opts || {};
+    return new Promise((resolve) => {
+      const dlg = $('dlg'), p = NQ.store.profile;
+      const input = h('input', { type: 'text', class: 'txt', maxlength: '20', placeholder: 'Ton pseudo (ex. Maxence)', value: hasName() ? p.name : '' });
+      const err = h('p', { class: 'hint' });
+      const done = (v) => { dlg.classList.remove('open'); dlg.innerHTML = ''; resolve(v); };
+      const save = () => {
+        const v = input.value.trim().slice(0, 20);
+        if (!v || v.toLowerCase() === DEFAULT_NAME.toLowerCase()) { err.textContent = 'Choisis un pseudo pour apparaître dans le classement.'; input.focus(); return; }
+        p.name = v; NQ.store.save(); done(v);
+      };
+      input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); save(); } });
+      dlg.innerHTML = '';
+      dlg.appendChild(h('div', { class: 'dlg-card name-card' },
+        h('h2', null, opts.title || '👋 Bienvenue dans NeuroQuest'),
+        h('p', null, opts.msg || 'Choisis ton pseudo : il apparaîtra dans le classement partagé avec toute la promo.'),
+        input, err,
+        h('div', { class: 'row' },
+          h('button', { class: 'btn', onclick: () => done(null) }, opts.later || 'Plus tard'),
+          h('button', { class: 'btn primary', onclick: save }, 'Valider'))));
+      dlg.classList.add('open');
+      dlg._cancel = () => done(null);
+      setTimeout(() => input.focus(), 50);
+    });
+  }
+
   function confirmDialog(msg, yes) {
     return new Promise((resolve) => {
       const dlg = $('dlg');
@@ -84,7 +115,10 @@ window.UI = (function () {
       h('h1', { class: 'logo' }, 'NEURO', h('span', null, 'QUEST')),
       h('p', { class: 'tag' }, 'Révise le Deep Learning en courant dans le tunnel'),
       h('div', { class: 'profile-card' },
-        h('div', null, h('b', null, p.name), titleOf(p) ? h('em', null, ' · ' + titleOf(p)) : null),
+        h('div', { class: 'name-row' },
+          h('b', null, hasName() ? p.name : 'Joueur anonyme'), titleOf(p) ? h('em', null, ' · ' + titleOf(p)) : null,
+          h('button', { class: 'btn small name-edit' + (hasName() ? '' : ' pulse'), onclick: () => askName({ title: '✏️ Changer de pseudo', msg: 'Ton pseudo apparaît dans le classement partagé.', later: 'Annuler' }).then(() => showMenu()) },
+            hasName() ? '✏️ Modifier' : '✏️ Choisir mon pseudo')),
         h('div', { class: 'xpbar' }, h('i', { style: 'width:' + pr.pct + '%' })),
         h('small', null, 'Palier ' + pr.level + '/' + NQ.prog.TIERS + (pr.max ? ' (max)' : ' · ' + pr.into + '/' + pr.need + ' XP') +
           ' · Collection : ' + seen + '/' + NQ.notions.length + ' notions · Record ' + p.stats.best)),
@@ -230,6 +264,7 @@ window.UI = (function () {
     hasModal: () => stack.length > 0,
     cancelDialog() { const d = $('dlg'); if (d.classList.contains('open') && d._cancel) { d._cancel(); return true; } return false; },
     start(cfg) { return H.startGame(cfg); },
+    askName, hasName,
     handlers: () => H
   };
 })();

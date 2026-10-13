@@ -141,16 +141,23 @@ window.UIViews = (function () {
   function leaderboard() {
     let diff = NQ.store.profile.difficulty;
     const body = h('div', { class: 'lb' });
+    let seq = 0;
     function render() {
+      const my = ++seq;
       body.innerHTML = '';
       body.appendChild(h('div', { class: 'seg-row' }, UI.DIFF_ORDER.map((d) =>
         h('button', { class: 'btn seg' + (d === diff ? ' on' : ''), onclick: () => { diff = d; render(); } }, UI.DIFF_LABEL[d]))));
-      const rows = NQ.leaderboard.top(20, diff);
-      if (!rows.length) { body.appendChild(h('p', { class: 'hint' }, 'Aucun score pour l\'instant : lance une partie !')); return; }
-      body.appendChild(h('table', { class: 'lb-table' },
-        h('tr', null, ['#', 'Joueur', 'Score', 'Chap.', 'Date'].map((t) => h('th', null, t))),
-        rows.map((e, i) => h('tr', null, h('td', null, String(i + 1)), h('td', null, e.name), h('td', null, String(e.score)),
-          h('td', null, e.chapter ? String(e.chapter) : 'Mix'), h('td', null, e.date)))));
+      const status = h('p', { class: 'hint' }, NQ.leaderboard.isShared() ? 'Classement partagé : chargement…' : 'Classement local (ce navigateur). Voir docs/FIREBASE.md pour un classement de promo.');
+      body.appendChild(status);
+      NQ.leaderboard.top(20, diff).then((rows) => {
+        if (my !== seq) return; // une autre difficulté a été choisie entre-temps
+        if (NQ.leaderboard.isShared()) status.textContent = rows.localFallback ? 'Classement partagé injoignable : affichage local.' : 'Classement partagé (tous les joueurs).';
+        if (!rows.length) { body.appendChild(h('p', { class: 'hint' }, 'Aucun score pour l\'instant : lance une partie !')); return; }
+        body.appendChild(h('table', { class: 'lb-table' },
+          h('tr', null, ['#', 'Joueur', 'Score', 'Chap.', 'Date'].map((t) => h('th', null, t))),
+          rows.map((e, i) => h('tr', null, h('td', null, String(i + 1)), h('td', null, e.name), h('td', null, String(e.score)),
+            h('td', null, e.chapter ? String(e.chapter) : 'Mix'), h('td', null, e.date)))));
+      });
     }
     render();
     UI.showFrame('🏆 Classement', body);

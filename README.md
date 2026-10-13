@@ -79,7 +79,8 @@ content/codex.js           fiches de révision, GÉNÉRÉ par tools/build_codex.
 js/core.js                 état, sauvegarde, tirage pondéré des épreuves, maîtrise
 js/audio.js                sons, musique procédurale, souffle d'accélération, vibrations (Web Audio)
 js/progression.js          XP, paliers, récompenses du pass, skins de boss
-js/leaderboard.js          classement (interface submit / top ; implémentation locale)
+js/firebase-config.js      configuration Firebase (null = classement local)
+js/leaderboard.js          classement : local (localStorage) ou partagé (Firestore) derrière la même interface
 js/runner.js               scène three.js : tunnel, vaisseau, sillage, portes
 js/minigames.js            salles : bug, ordre (glisser-déposer), assoc
 js/ui.js                   menu, HUD, feedback, fin de partie, dialogues
@@ -138,11 +139,15 @@ Le validateur vérifie le schéma, l'unicité des ids, l'existence des notions r
 
 Ajouter une entrée dans `content/notions.js` : `{"id":"ch.nom","ch":N,"label":"…","fiche":"0N","section":"fragment du titre de section"}`. Le `section` est recherché (sans casse) dans les titres de la fiche pour ouvrir le Codex au bon endroit. Le validateur exigera ensuite au moins une épreuve sur cette notion.
 
-## 7. Classement partagé (étape suivante)
+## 7. Classement partagé (Firebase, gratuit)
 
-Le fichier `js/leaderboard.js` isole l'interface `submit({name, score, difficulty, chapter, date})` et `top(n, difficulty)`. L'implémentation actuelle écrit dans le localStorage. Pour un classement de promo, remplacer le corps de ces deux fonctions par des appels à Firebase (offre gratuite Spark, sans carte bancaire) ou Supabase ; le reste du jeu n'a pas à changer.
+Le classement est local par défaut. Pour un classement commun à toute la promo, suivre `docs/FIREBASE.md` : créer un projet Firebase (offre gratuite, sans carte bancaire), coller sa configuration dans `js/firebase-config.js`, publier les règles Firestore fournies. Le jeu charge alors le SDK Firebase à la demande, envoie chaque score dans la collection `scores` et affiche le classement partagé ; hors ligne, il retombe sur le classement local.
 
-## 8. Vérifications effectuées
+## 8. Jouer en ligne
+
+Le jeu est publié sur GitHub Pages : https://dorsumsellae.github.io/NeuroQuest/ (mis à jour à chaque `git push` sur `main`). La sauvegarde reste dans le navigateur de chaque joueur.
+
+## 9. Vérifications effectuées
 
 - Contenu relu par quatre relectures indépendantes contre le texte des slides ; nombres de paramètres et shapes des réseaux recalculés avec Keras.
 - Chargement depuis `file://` sans erreur console ; parties complètes testées en Découverte, Normal et Expert (fin par vies), boss avec bouclier, salles bug / ordre / assoc, glisser-déposer, Codex, export / import, mise en page vérifiée en 390 × 844.

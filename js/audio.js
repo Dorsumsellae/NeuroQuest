@@ -75,19 +75,26 @@ NQ.audio = (function () {
   };
   let boostNode = null;
 
-  // ---------- Musique d'ambiance ----------
-  // Nappe de deux oscillateurs désaccordés sous un filtre passe-bas, progression lente d'accords,
-  // et un arpège discret. Planifiée par petits blocs sur l'horloge audio.
-  const CHORDS = [[48, 55, 60, 64], [45, 52, 57, 60], [41, 48, 53, 57], [43, 50, 55, 59]]; // Cmaj Am Fmaj Gmaj (MIDI)
+  // ---------- Musique : synthwave énergique, 128 BPM ----------
+  // Par mesure (4 temps) : grosse caisse sur chaque temps, charleston sur les contretemps, basse
+  // en croches, arpège en doubles-croches et nappe discrète. Progression Am F C G.
+  // Tout est planifié sur l'horloge audio par blocs d'une mesure.
+  const CHORDS = [[45, 52, 57, 60], [41, 48, 53, 57], [48, 55, 60, 64], [43, 50, 55, 59]]; // Am Fmaj Cmaj Gmaj (MIDI)
   const midi = (n) => 440 * Math.pow(2, (n - 69) / 12);
+  const BPM = 128, BEAT = 60 / BPM;
   const music = {
-    playing: false, timer: null, bus: null, next: 0, bar: 0, STEP: 4.0,
+    playing: false, timer: null, bus: null, next: 0, bar: 0, STEP: BEAT * 4, noise: null,
     start() {
       const ac = ctx(); if (!ac || this.playing) return;
       this.bus = ac.createGain(); this.bus.gain.value = 0.0001; this.bus.connect(master);
-      this.bus.gain.exponentialRampToValueAtTime(0.9, ac.currentTime + 2);
+      this.bus.gain.exponentialRampToValueAtTime(0.8, ac.currentTime + 1);
+      if (!this.noise) { // bruit blanc partagé pour la charleston
+        const len = ac.sampleRate, buf = ac.createBuffer(1, len, ac.sampleRate), d = buf.getChannelData(0);
+        for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+        this.noise = buf;
+      }
       this.playing = true; this.next = ac.currentTime + 0.1; this.bar = 0;
-      this.timer = setInterval(() => this.schedule(), 500);
+      this.timer = setInterval(() => this.schedule(), 400);
       this.schedule();
     },
     stop() {
@@ -101,33 +108,54 @@ NQ.audio = (function () {
       const ac = ctx(); if (!ac || !this.playing) return;
       while (this.next < ac.currentTime + 1.2) { this.playBar(this.next); this.next += this.STEP; this.bar++; }
     },
-    pad(f, t, dur, detune) {
-      const ac = AC;
+    // Voix : oscillateur + filtre + enveloppe, nettoyés à la fin de la note
+    voice(type, f, t, dur, vol, cutoff, opts) {
+      const ac = AC; opts = opts || {};
       const o = ac.createOscillator(), g = ac.createGain(), flt = ac.createBiquadFilter();
-      o.type = 'triangle'; o.frequency.value = f; o.detune.value = detune;
-      flt.type = 'lowpass'; flt.frequency.value = 900;
-      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.028, t + 0.8);
-      g.gain.setValueAtTime(0.028, t + dur - 0.9); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.type = type; o.frequency.setValueAtTime(f, t); if (opts.detune) o.detune.value = opts.detune;
+      if (opts.glideTo) o.frequency.exponentialRampToValueAtTime(opts.glideTo, t + (opts.glideTime || 0.08));
+      flt.type = 'lowpass'; flt.frequency.setValueAtTime(cutoff, t);
+      if (opts.sweep) flt.frequency.exponentialRampToValueAtTime(Math.max(80, cutoff * opts.sweep), t + dur);
+      const a = opts.attack || 0.005, r = Math.max(0.02, dur - a);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + a);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + a + r);
       o.connect(flt); flt.connect(g); g.connect(this.bus); o.start(t); o.stop(t + dur + 0.05);
       o.onended = () => { o.disconnect(); flt.disconnect(); g.disconnect(); };
     },
-    pluck(f, t) {
-      const ac = AC;
-      const o = ac.createOscillator(), g = ac.createGain();
-      o.type = 'sine'; o.frequency.value = f;
-      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.035, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
-      o.connect(g); g.connect(this.bus); o.start(t); o.stop(t + 0.5);
-      o.onended = () => { o.disconnect(); g.disconnect(); };
+    kick(t) { this.voice('sine', 150, t, 0.28, 0.16, 400, { glideTo: 45, glideTime: 0.12 }); },
+    hat(t, open) {
+      const ac = AC, src = ac.createBufferSource(), g = ac.createGain(), flt = ac.createBiquadFilter();
+      src.buffer = this.noise; flt.type = 'highpass'; flt.frequency.value = 7000;
+      const dur = open ? 0.18 : 0.05;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(open ? 0.05 : 0.04, t + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      src.connect(flt); flt.connect(g); g.connect(this.bus); src.start(t); src.stop(t + dur + 0.02);
+      src.onended = () => { src.disconnect(); flt.disconnect(); g.disconnect(); };
     },
+    bass(f, t, dur) { this.voice('sawtooth', f, t, dur, 0.09, 700, { sweep: 0.3, attack: 0.004 }); },
+    lead(f, t, dur) { this.voice('square', f, t, dur, 0.035, 2600, { sweep: 0.5, attack: 0.004, detune: 4 }); },
+    pad(f, t, dur, detune) { this.voice('sawtooth', f, t, dur, 0.012, 1100, { attack: 0.25, detune }); },
     playBar(t) {
       if (!this.bus) return;
-      const chord = CHORDS[this.bar % CHORDS.length];
-      chord.forEach((n, i) => { this.pad(midi(n), t, this.STEP + 0.4, i % 2 ? 6 : -6); });
-      // arpège : 8 croches sur l'accord, une octave au-dessus, quelques silences
+      const chord = CHORDS[this.bar % CHORDS.length], root = chord[0], E = BEAT / 2, Sx = BEAT / 4;
+      // nappe : fondamentale + quinte, discrète
+      this.pad(midi(root + 12), t, this.STEP, -7); this.pad(midi(chord[1] + 12), t, this.STEP, 7);
+      // batterie : grosse caisse sur chaque temps (+ 1 contretemps une mesure sur deux), charleston sur les contretemps
+      for (let b = 0; b < 4; b++) {
+        this.kick(t + b * BEAT);
+        this.hat(t + b * BEAT + E, b === 3 && this.bar % 2 === 1);
+      }
+      if (this.bar % 2 === 1) this.kick(t + 3 * BEAT + E);
+      // basse en croches : fondamentale, avec l'octave sur les contretemps 2 et 4
       for (let s = 0; s < 8; s++) {
-        if ((this.bar + s) % 5 === 3) continue;
-        const n = chord[(s * 2 + (this.bar % 3)) % chord.length] + 12 + (s === 7 ? 12 : 0);
-        this.pluck(midi(n), t + s * (this.STEP / 8));
+        const up = (s === 3 || s === 7) ? 12 : 0;
+        this.bass(midi(root - 12 + up), t + s * E, E * 0.9);
+      }
+      // arpège en doubles-croches : montée sur l'accord, une octave au-dessus, motif qui varie par mesure
+      const pattern = [0, 1, 2, 3, 2, 1, 0, 2, 1, 3, 2, 0, 3, 1, 2, 3];
+      for (let s = 0; s < 16; s++) {
+        if ((s + this.bar) % 7 === 6) continue; // respirations
+        const n = chord[pattern[(s + this.bar * 3) % 16]] + 12 + (s >= 12 && this.bar % 4 === 3 ? 12 : 0);
+        this.lead(midi(n), t + s * Sx, Sx * 0.8);
       }
     },
     toggle(on) { if (on) { if (unlocked) this.start(); } else this.stop(); }

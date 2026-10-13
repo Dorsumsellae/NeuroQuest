@@ -15,12 +15,12 @@ Ouvrir `js/firebase-config.js` et remplacer `null` par l'objet copié :
 
 ```js
 window.NQ_FIREBASE_CONFIG = {
-  apiKey: "AIza…",
-  authDomain: "neuroquest-xxxx.firebaseapp.com",
-  projectId: "neuroquest-xxxx",
-  storageBucket: "neuroquest-xxxx.appspot.com",
-  messagingSenderId: "1234567890",
-  appId: "1:1234567890:web:abcdef"
+  apiKey: "AIzaSyCPRZNNiX_mRvfjqKh8TK1Gjrs8ZQnHVvk",
+  authDomain: "neuroquest-9e856.firebaseapp.com",
+  projectId: "neuroquest-9e856",
+  storageBucket: "neuroquest-9e856.firebasestorage.app",
+  messagingSenderId: "854082221542",
+  appId: "1:854082221542:web:b8395e60e977962a6cd227"
 };
 ```
 

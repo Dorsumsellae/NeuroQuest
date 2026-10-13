@@ -1129,3 +1129,5 @@ body.boost #stage::after { opacity: 1; animation: speedlines .25s linear infinit
 .ord-row .grip { font-size: 24px; padding: 6px 8px; }
 .ord-list.dragging, .ord-list.dragging * { cursor: grabbing; }
 .ord-row.drag { transform: scale(1.02); position: relative; z-index: 2; }
+/* Feedback figé (Espace ou toucher) */
+.fb-box.paused { box-shadow: 0 0 0 2px var(--gold) inset; }

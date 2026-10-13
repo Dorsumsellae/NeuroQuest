@@ -195,7 +195,12 @@ window.UI = (function () {
           d.item ? h('button', { class: 'btn', onclick: () => UICodex.open({ notionId: d.item.notions[0], resume: true }) }, '📖 Réviser dans le Codex') : null,
           go));
       fb.appendChild(box); fb.classList.add('open'); box.scrollTop = 0;
-      startAutoContinue(go);
+      fbGo = go;
+      // Toucher ou faire défiler l'explication la fige aussi (équivalent d'Espace sur mobile)
+      box.addEventListener('pointerdown', (e) => { if (!e.target.closest('button') && !e.target.closest('.term')) pauseFeedback(); });
+      box.addEventListener('scroll', pauseFeedback, { passive: true });
+      // Solution demandée (Espace) : pas de reprise automatique, l'élève lit à son rythme
+      if (d.noAuto) pauseFeedback(); else startAutoContinue(go);
     });
   }
   // Reprise automatique : compte à rebours affiché sur le bouton, en pause tant qu'un écran
@@ -216,6 +221,13 @@ window.UI = (function () {
     }, 250);
   }
   function stopAutoContinue() { if (autoTimer) { clearInterval(autoTimer); autoTimer = null; } }
+  // Met le feedback en pause : plus de compte à rebours, seule ↑ (ou le bouton) fait passer à la suite
+  let fbGo = null;
+  function pauseFeedback() {
+    stopAutoContinue();
+    if (fbGo) fbGo.textContent = '⏸ En pause · Continuer ▶ (↑)';
+    const box = document.querySelector('#fb .fb-box'); if (box) box.classList.add('paused');
+  }
   function hideFeedback() { stopAutoContinue(); const fb = $('fb'); fb.classList.remove('open'); fb.innerHTML = ''; }
   function feedbackOpen() { return !!fbResolve && $('fb').classList.contains('open'); }
   function continueFeedback() {
@@ -260,7 +272,7 @@ window.UI = (function () {
 
   return {
     init, showMenu, hideMenu, showHud, updateHud, setQuestion, flash,
-    showFeedback, hideFeedback, feedbackOpen, continueFeedback, showGameOver,
+    showFeedback, hideFeedback, feedbackOpen, continueFeedback, pauseFeedback, showGameOver,
     openScreen, closeTop, closeAll, frame, showFrame, confirm: confirmDialog,
     applyEquipped, titleOf, CH_LABEL, DIFF_LABEL, DIFF_ORDER, showHint, dimChip,
     hasModal: () => stack.length > 0,

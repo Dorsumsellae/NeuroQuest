@@ -264,7 +264,7 @@ window.UIViews = (function () {
   function bossSelect() {
     const p = NQ.store.profile, now = Date.now();
     const body = h('div', { class: 'boss-sel' }, h('p', { class: 'hint' },
-      '10 épreuves mixtes, 1 minute par question (↑ maintenue pour avancer plus vite), 1 seule vie, pas d\'explication avant le bilan. Lis la fiche du chapitre dans les 30 minutes avant le combat pour obtenir un 🛡 bouclier (une erreur pardonnée). Victoire : skin unique, +200 XP, piste Élite.'));
+      '10 épreuves mixtes, 1 minute par question (↑ maintenue pour avancer plus vite), pas d\'explication avant le bilan. 🎯 Entraînement : 3 vies, sans récompense. 👹 Combat : 1 seule vie ; victoire = skin unique, +200 XP, piste Élite. Lis la fiche du chapitre dans les 30 minutes avant pour obtenir un 🛡 bouclier (une erreur pardonnée).'));
     [1, 2, 3, 4].forEach((c) => {
       const shield = p.codexRead[c] && now - p.codexRead[c] < 30 * 60000;
       body.appendChild(h('div', { class: 'boss-row' },
@@ -272,7 +272,8 @@ window.UIViews = (function () {
           h('small', null, (p.bosses[c] ? '✅ Vaincu · ' : '') + 'Skin : ' + NQ.prog.BOSS_SKINS[c].name + (shield ? ' · 🛡 bouclier actif' : ''))),
         h('div', { class: 'row' },
           h('button', { class: 'btn small', onclick: () => UICodex.open({ fiche: CH_FICHE[c] }) }, '📖 Lire la fiche'),
-          h('button', { class: 'btn boss', onclick: () => { closeModals(); UI.start({ chapter: c, difficulty: 'expert', mode: 'boss' }); } }, 'Combattre'))));
+          h('button', { class: 'btn', onclick: () => { closeModals(); UI.start({ chapter: c, difficulty: 'expert', mode: 'boss', practice: true }); } }, '🎯 S\'entraîner (3 vies)'),
+          h('button', { class: 'btn boss', onclick: () => { closeModals(); UI.start({ chapter: c, difficulty: 'expert', mode: 'boss' }); } }, '👹 Combattre (1 vie)'))));
     });
     UI.showFrame('👹 Boss de chapitre', body);
   }

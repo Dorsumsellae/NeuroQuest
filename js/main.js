@@ -88,7 +88,7 @@
       : cfg.mode === 'boss' ? Object.assign({}, DIFF[ed], { speed: 2, inc: 0, max: 2, roomTimer: 60, boost: 12 })
         : DIFF[ed];
     const recent = p.codexRead[cfg.chapter] && Date.now() - p.codexRead[cfg.chapter] < SHIELD_WINDOW;
-    const lives = cfg.mode === 'flash' || cfg.mode === 'campaign' ? null : cfg.mode === 'boss' ? 1 : D.lives;
+    const lives = cfg.mode === 'flash' || cfg.mode === 'campaign' ? null : cfg.mode === 'boss' ? (cfg.practice ? 3 : 1) : D.lives; // boss : 1 vie, 3 en entraînement
     let all = cfg.mode === 'flash' ? [] : NQ.pool({ ch: cfg.chapter });
     if (D.conceptOnly) all = all.filter(isConcept);
     S = {
@@ -121,7 +121,7 @@
   function refreshHud() {
     const c = S.cfg;
     const tag = c.mode === 'campaign' ? '🗺 ' + ((NQ.notionsById[c.notionFilter] || {}).label || 'Campagne').slice(0, 30)
-      : c.mode === 'boss' ? '👹 Boss ' + c.chapter
+      : c.mode === 'boss' ? (c.practice ? '🎯 Boss ' + c.chapter + ' (entraînement)' : '👹 Boss ' + c.chapter)
       : c.mode === 'flash' ? '🎯 ' + ((NQ.notionsById[c.notionFilter] || {}).label || 'Entraînement').slice(0, 28)
         : UI.CH_LABEL[c.chapter] + ' · ' + (UI.DIFF_LABEL[c.difficulty] || c.difficulty);
     const total = c.mode === 'boss' ? BOSS_LEN : c.mode === 'flash' ? FLASH_LEN : c.mode === 'campaign' ? S.queue.length : (S.D.len || 0);
@@ -295,7 +295,7 @@
   function finish(win) {
     const p = prof(), c = S.cfg;
     S.state = 'end';
-    if (c.mode === 'boss' && win) {
+    if (c.mode === 'boss' && win && !c.practice) { // les récompenses sont réservées au vrai combat (1 vie)
       p.bosses[c.chapter] = true; p.elite = true; p.xp += 200; S.xp += 200;
     }
     let campaign = null;
@@ -330,12 +330,14 @@
     Runner.clearGate(); Runner.setSpeed(IDLE_SPEED); UI.setQuestion(null);
     const res = {
       headline: c.mode === 'campaign' ? (win ? '✅ Étape validée' : '🔁 Étape à refaire')
+        : c.mode === 'boss' && c.practice ? (win ? '🎯 Entraînement réussi' : '🎯 Entraînement terminé')
         : c.mode === 'boss' ? (win ? '👹 Boss vaincu !' : '💀 Le boss résiste') : c.mode === 'flash' ? '🎯 Entraînement terminé'
         : S.D.conceptOnly ? '🌱 Session Découverte terminée' : 'Partie terminée',
-      sub: campaign ? campaign.sub : c.mode === 'boss' ? (win ? 'Skin « ' + NQ.prog.BOSS_SKINS[c.chapter].name + ' » et piste Élite débloqués (+200 XP).' : 'Relis les explications ci-dessous et retente.') : '',
+      sub: campaign ? campaign.sub : c.mode === 'boss' && c.practice ? (win ? 'Prêt pour le vrai combat : 1 seule vie, et le skin « ' + NQ.prog.BOSS_SKINS[c.chapter].name + ' » à la clé.' : 'Relis les explications ci-dessous, puis réessaie.') : c.mode === 'boss' ? (win ? 'Skin « ' + NQ.prog.BOSS_SKINS[c.chapter].name + ' » et piste Élite débloqués (+200 XP).' : 'Relis les explications ci-dessous et retente.') : '',
       score: S.score, xp: S.xp, noScore: c.mode === 'flash' || c.mode === 'campaign', levelUp: lvlNow > startLvl ? lvlNow : 0,
       unlocks, recap: S.recap, full: c.mode === 'boss',
-      nextLabel: campaign && campaign.nextLabel, onNext: campaign && campaign.onNext,
+      nextLabel: campaign ? campaign.nextLabel : (c.mode === 'boss' && c.practice ? '👹 Affronter le vrai boss ▶' : null),
+      onNext: campaign ? campaign.onNext : (c.mode === 'boss' && c.practice ? () => startGame({ chapter: c.chapter, mode: 'boss', difficulty: 'expert' }) : null),
       campaignMap: c.mode === 'campaign'
     };
     UI.showGameOver(res);

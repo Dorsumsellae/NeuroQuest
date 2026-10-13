@@ -229,11 +229,13 @@ window.UI = (function () {
     hideFeedback(); showHud(false);
     const recap = r.recap.map((e) => h('details', { class: 'rec ' + (e.ok ? 'ok' : 'ko'), open: !e.ok && !r.full ? true : null },
       h('summary', null, (e.ok ? '✅ ' : '❌ ') + e.item.q),
-      (r.full || !e.ok) ? h('div', null,
+      // Toujours une explication dépliable (ouverte d'office pour les erreurs, hors boss)
+      h('div', { class: 'rec-body' },
+        e.item.ok ? h('p', { class: 'ok' }, h('b', null, '✅ Bonne réponse : '), e.item.ok) : MiniGames.solutionNode(e.item),
         e.item.plain ? h('p', { class: 'plain' }, h('b', null, '💬 En clair : '), e.item.plain) : null,
         h('p', null, h('b', null, e.item.plain ? 'Plus précisément : ' : 'Explication : '), e.item.why),
         e.item.whyNot ? h('p', null, h('b', null, 'Pourquoi les autres sont faux : '), e.item.whyNot) : null,
-        h('button', { class: 'btn small', onclick: () => UICodex.open({ notionId: e.item.notions[0], resume: true }) }, '📖 Codex')) : null));
+        h('button', { class: 'btn small', onclick: () => UICodex.open({ notionId: e.item.notions[0], resume: true }) }, '📖 Codex'))));
     const unlocks = r.unlocks.length ? h('div', { class: 'unlocks' }, h('b', null, '🎁 Débloqué : '),
       r.unlocks.map((u) => h('span', { class: 'pill' }, u.name))) : null;
     const node = h('div', { class: 'frame over' },

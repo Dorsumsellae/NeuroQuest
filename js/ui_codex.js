@@ -60,9 +60,11 @@ window.UICodex = (function () {
       if (notion) {
         const e = NQ.masteryOf(notion.id);
         const trainBtn = h('button', { class: 'btn small primary', onclick: () => train(notion.id) }, '🎯 M\'entraîner (5 portes)');
-        content.appendChild(h('div', { class: 'badge' }, h('b', null, notion.label),
-          h('div', { class: 'mbar' }, h('i', { style: 'width:' + Math.round(e.m) + '%' })),
-          h('small', null, NQ.masteryState(notion.id) + ' · ' + Math.round(e.m) + '/100'), trainBtn));
+        content.appendChild(h('div', { class: 'badge' },
+          h('div', { class: 'badge-info' }, h('b', null, notion.label),
+            h('div', { class: 'mbar' }, h('i', { style: 'width:' + Math.round(e.m) + '%' })),
+            h('small', null, NQ.masteryState(notion.id) + ' · ' + Math.round(e.m) + '/100')),
+          trainBtn));
       }
       content.appendChild(h('div', { html: marked.parse(sec.md || '') }));
       content.scrollTop = 0;
@@ -74,7 +76,10 @@ window.UICodex = (function () {
     }
     show(cur.fiche, cur.sectionId);
     UI.showFrame('📖 Codex', root, { closeLabel: opts.resume ? '▶ Reprendre' : '✕ Fermer' });
-    const active = nav.querySelector('.on'); if (active && active.scrollIntoView) active.scrollIntoView({ block: 'center' });
+    // Centrer l'entrée active dans la colonne de navigation seulement (scrollIntoView ferait
+    // aussi défiler la fenêtre entière et cacherait le haut de la page sous l'en-tête).
+    const active = nav.querySelector('.on');
+    if (active) nav.scrollTop = Math.max(0, active.offsetTop - nav.clientHeight / 2 + active.offsetHeight / 2);
   }
 
   return { open, locate };

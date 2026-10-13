@@ -46,7 +46,7 @@ La vitesse augmente à chaque bonne réponse jusqu'au plafond du niveau.
 
 ### Après chaque réponse
 
-Le feedback donne la bonne réponse, pourquoi elle est juste, pourquoi les autres sont fausses, et un bouton **Réviser dans le Codex** qui ouvre la section de la fiche correspondant à la notion. C'est le cœur de l'apprentissage : l'erreur mène à la fiche, la fiche mène à la prochaine réussite.
+Le feedback donne la bonne réponse, pourquoi elle est juste, pourquoi les autres sont fausses, et un bouton **Réviser dans le Codex** qui ouvre la section de la fiche correspondant à la notion. Le jeu reprend dès qu'on appuie sur Espace (ou Entrée, ou le bouton), et automatiquement après 5 secondes ; ce délai se règle dans les Options (désactivé, 5 s, 10 s) et se met en pause tant que le Codex est ouvert. C'est le cœur de l'apprentissage : l'erreur mène à la fiche, la fiche mène à la prochaine réussite.
 
 ## 3. Progression
 

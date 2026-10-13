@@ -140,14 +140,34 @@ window.UI = (function () {
       if (d.why) parts.push(h('p', { class: 'why' }, h('b', null, 'Explication : '), d.why));
       if (d.whyNot) parts.push(h('p', { class: 'whynot' }, h('b', null, 'Pourquoi les autres sont faux : '), d.whyNot));
       (d.extra || []).forEach((t) => parts.push(h('p', { class: 'extra' }, t)));
+      const go = h('button', { class: 'btn primary', id: 'go', onclick: continueFeedback }, 'Continuer ▶');
       const box = h('div', { class: 'fb-box ' + (d.ok ? 'ok' : 'ko') }, parts,
         h('div', { class: 'row' },
           d.item ? h('button', { class: 'btn', onclick: () => UICodex.open({ notionId: d.item.notions[0], resume: true }) }, '📖 Réviser dans le Codex') : null,
-          h('button', { class: 'btn primary', id: 'go', onclick: continueFeedback }, 'Continuer ▶')));
+          go));
       fb.appendChild(box); fb.classList.add('open'); box.scrollTop = 0;
+      startAutoContinue(go);
     });
   }
-  function hideFeedback() { const fb = $('fb'); fb.classList.remove('open'); fb.innerHTML = ''; }
+  // Reprise automatique : compte à rebours affiché sur le bouton, en pause tant qu'un écran
+  // (Codex, dialogue) est ouvert ; le compte repart de zéro à la fermeture de cet écran.
+  let autoTimer = null;
+  function startAutoContinue(btn) {
+    stopAutoContinue();
+    const total = +NQ.store.profile.autoContinue || 0;
+    if (!total) return;
+    let left = total;
+    const label = () => { btn.textContent = 'Continuer ▶ (' + Math.ceil(left) + ' s)'; };
+    label();
+    autoTimer = setInterval(() => {
+      if (!fbResolve) { stopAutoContinue(); return; }
+      if (stack.length) { left = total; btn.textContent = 'Continuer ▶'; return; } // en pause
+      left -= 0.25; label();
+      if (left <= 0) { stopAutoContinue(); continueFeedback(); }
+    }, 250);
+  }
+  function stopAutoContinue() { if (autoTimer) { clearInterval(autoTimer); autoTimer = null; } }
+  function hideFeedback() { stopAutoContinue(); const fb = $('fb'); fb.classList.remove('open'); fb.innerHTML = ''; }
   function feedbackOpen() { return !!fbResolve && $('fb').classList.contains('open'); }
   function continueFeedback() {
     if (!fbResolve || stack.length) return false; // pas de reprise tant que le Codex est ouvert

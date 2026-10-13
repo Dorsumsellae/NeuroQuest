@@ -42,7 +42,8 @@
     elite: false, bosses: { 1: false, 2: false, 3: false, 4: false },
     mastery: {}, codexRead: {},
     stats: { games: 0, best: 0, answers: 0, correct: 0 },
-    muted: false
+    muted: false,
+    autoContinue: 5 // secondes avant reprise automatique après un feedback (0 = désactivé)
   });
   // Fusionne une source (localStorage / import) dans les valeurs par défaut
   function sanitize(src) {

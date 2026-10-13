@@ -182,8 +182,20 @@ window.UIViews = (function () {
     const mute = h('button', { class: 'btn seg' + (p.muted ? '' : ' on'), onclick: () => {
       p.muted = !p.muted; NQ.store.save(); mute.textContent = p.muted ? '🔇 Son coupé' : '🔊 Son activé'; mute.classList.toggle('on', !p.muted);
     } }, p.muted ? '🔇 Son coupé' : '🔊 Son activé');
+    const AUTO = [[0, 'Désactivée'], [5, '5 s'], [10, '10 s']];
+    const autoRow = h('div', { class: 'seg-row' });
+    const renderAuto = () => {
+      autoRow.innerHTML = '';
+      AUTO.forEach(([v, lbl]) => autoRow.appendChild(h('button', {
+        class: 'btn seg' + ((+p.autoContinue || 0) === v ? ' on' : ''),
+        onclick: () => { p.autoContinue = v; NQ.store.save(); renderAuto(); }
+      }, lbl)));
+    };
+    renderAuto();
     UI.showFrame('⚙ Options', h('div', { class: 'opts' },
       h('label', null, 'Nom du joueur'), name, mute,
+      h('h3', null, 'Reprise automatique après une réponse'),
+      h('p', { class: 'hint' }, 'Le jeu continue tout seul après ce délai (ou dès que tu appuies sur Espace). En pause tant que le Codex est ouvert.'), autoRow,
       h('h3', null, 'Exporter la progression'), exp, h('button', { class: 'btn', onclick: copy }, 'Copier'),
       h('h3', null, 'Importer une progression'), imp, h('button', { class: 'btn', onclick: doImport }, 'Importer'), msg,
       h('h3', null, 'Zone dangereuse'), h('button', { class: 'btn danger', onclick: doReset }, 'Réinitialiser la progression')));

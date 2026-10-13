@@ -38,9 +38,19 @@ def main() -> int:
 
     seen_ids, covered = set(), {}
     total, by_type, by_diff = 0, {}, {}
-    for ch in (1, 2, 3, 4):
-        items = load_js_array(CONTENT / f"ch{ch}.js", rf"window\.NQ\.content\.ch{ch}\s*=")
+    banks = [(f"ch{c}", c) for c in (1, 2, 3, 4)] + [("camp_ch1", 1), ("camp_ch2a", 2), ("camp_ch2b", 2), ("camp_ch3", 3), ("camp_ch4", 4)]
+    camp_count = {}
+    for bank, ch in banks:
+        path = CONTENT / f"{bank}.js"
+        if not path.exists():
+            if bank.startswith("camp_"):
+                warnings.append(f"{bank}.js absent (questions de campagne)"); continue
+            errors.append(f"{bank}.js absent"); continue
+        items = load_js_array(path, rf"window\.NQ\.content\.{bank}\s*=")
         for q in items:
+            if q.get("camp"):
+                for nid in q.get("notions", []):
+                    camp_count[nid] = camp_count.get(nid, 0) + 1
             total += 1
             qid = q.get("id", "?")
             if qid in seen_ids:
@@ -117,6 +127,9 @@ def main() -> int:
         seen_terms[k] = 1
     print(f"{len(lessons)} micro-leçons, {len(schemas)} schémas, {len(glossary)} termes de glossaire")
 
+    for nid in sorted(notion_ids):
+        if camp_count.get(nid, 0) < 3:
+            warnings.append(f"notion {nid} : {camp_count.get(nid, 0)} question(s) de campagne (3 attendues)")
     missing = sorted(notion_ids - set(covered))
     for nid in missing:
         errors.append(f"notion {nid} : aucune épreuve ne la couvre")

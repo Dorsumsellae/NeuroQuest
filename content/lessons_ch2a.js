@@ -54,7 +54,7 @@ Object.assign(window.NQ.lessons, {
     "Pour apprendre, un réseau doit savoir de combien chaque poids est responsable de son erreur.",
     "Passe avant (forward) : on donne des exemples annotés, le réseau calcule ses sorties, et on mesure l'écart avec les bonnes réponses (la perte).",
     "Passe arrière (backward) : on fait remonter le gradient de cette erreur de la dernière couche vers la première, grâce à la règle de dérivation en chaîne. C'est la backpropagation.",
-    "On met alors à jour tous les poids avec θ ← θ − η∇ (η = learning rate, ∇ = gradient), puis on recommence sur le lot suivant et sur plusieurs epochs."
+    "On met alors à jour tous les poids avec w ← w − η·∇ (η = learning rate, ∇ = gradient de l'erreur par rapport au poids), puis on recommence sur le lot suivant et sur plusieurs epochs."
   ],
   "ex": "Le réseau sort (0.25, 0.79) alors que la cible est (1, 0) : l'erreur est rétropropagée pour que, au prochain passage, la première sortie monte et la seconde baisse.",
   "svg": "backprop",
@@ -101,7 +101,7 @@ Object.assign(window.NQ.lessons, {
     "Après sa somme pondérée a, un neurone passe le résultat dans une fonction d'activation qui décide de sa sortie.",
     "Sans elle, empiler des couches ne servirait à rien : tout reviendrait à une seule transformation linéaire.",
     "ReLU = max(0, a) : garde le positif, met le négatif à 0 ; c'est le choix courant dans les couches cachées. Sigmoïde = 1/(1+e⁻ᵃ), entre 0 et 1, utile pour une probabilité.",
-    "tanh donne une valeur entre −1 et 1 (utilisée dans les LSTM). L'échelon (0 ou 1) du neurone historique n'est plus utilisé : sa dérivée est nulle presque partout, donc la backpropagation ne peut pas passer."
+    "tanh donne une valeur entre −1 et 1. L'échelon (0 ou 1) est, avec la sigmoïde, le choix du neurone formel du cours ; en pratique on lui préfère des fonctions dérivables, car sa dérivée est nulle presque partout et la backpropagation ne peut pas passer."
   ],
   "ex": "Pour a = 2.0 : échelon → 1, sigmoïde → 1/(1+e⁻²) ≈ 0.88, tanh → 0.96, ReLU → 2. Pour a = −3 : ReLU → 0.",
   "svg": "neurone",
@@ -179,7 +179,7 @@ Object.assign(window.NQ.lessons, {
   "p": [
     "Un outil de prétraitement comme StandardScaler fonctionne en deux temps : fit apprend des paramètres sur les données (moyenne μ, écart-type σ), transform les applique : (x − μ) / σ.",
     "fit_transform fait les deux d'un coup : on l'utilise sur le train uniquement.",
-    "Sur le test, on appelle seulement transform, pour réutiliser la moyenne et l'écart-type du train. Refaire un fit sur le test changerait la transformation et ferait fuiter de l'information du test.",
+    "Sur le test, on appelle seulement transform, pour réutiliser la moyenne et l'écart-type du train. Refaire un fit sur le test changerait la transformation et ferait fuiter de l'information du test. Exception sans conséquence : PolynomialFeatures n'apprend aucune statistique, d'où le fit_transform sur X_test du slide 22 des régressions.",
     "Autre réflexe : X.reshape(-1, 1) transforme un vecteur 1D en colonne de forme (n, 1) ; le −1 veut dire « calcule toi-même cette dimension ». scikit-learn exige un X en 2D."
   ],
   "ex": "scaler = StandardScaler(); x_train = scaler.fit_transform(x_train); x_test = scaler.transform(x_test). Et np.array([1, 2, 3]).reshape(-1, 1) donne une colonne de forme (3, 1).",

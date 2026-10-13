@@ -47,7 +47,10 @@
 
   // Campagne : jusqu'à 3 épreuves sur la notion de l'étape, les plus faciles d'abord (portes avant salles)
   function buildCampaignQueue(cfg) {
-    const all = NQ.pool({ notion: cfg.notionFilter });
+    // Priorité aux questions écrites pour la campagne (rappel, compréhension, piège), dans leur ordre
+    const camp = NQ.pool({ notion: cfg.notionFilter }).filter((it) => it.camp);
+    if (camp.length >= CAMPAIGN_LEN) return camp.slice(0, CAMPAIGN_LEN);
+    const all = NQ.pool({ notion: cfg.notionFilter }).filter((it) => !it.camp);
     const rank = (it) => (NQ.isRoom(it) ? 10 : 0) + it.diff;
     return NQ.shuffle(all).sort((a, b) => rank(a) - rank(b)).slice(0, CAMPAIGN_LEN);
   }

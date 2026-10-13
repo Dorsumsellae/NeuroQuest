@@ -32,7 +32,7 @@ window.NQ.lessons = {
   "p": [
     "Un autoencodeur est un réseau qui apprend à recopier son entrée… en passant par un goulot très étroit.",
     "L'encodeur réduit l'image (ou la série de mesures) en un petit vecteur : le code, aussi appelé espace latent.",
-    "Le décodeur fait le chemin inverse et tente de reconstruire l'entrée à partir de ce code.",
+    "Le décodeur fait le chemin inverse et tente de reconstruire l'entrée à partir de ce code. Sa structure ressemble à un MLP : le nombre de couches et leur taille sont les choix clés.",
     "Comme le code est petit, le réseau est obligé de ne garder que l'essentiel : c'est ce qui le rend utile pour compresser, débruiter ou repérer ce qui sort de l'ordinaire."
   ],
   "ex": "Une image 28×28 = 784 nombres entre, 32 nombres au milieu, 784 nombres ressortent. Si la sortie ressemble à l'entrée, le code a capturé l'important.",

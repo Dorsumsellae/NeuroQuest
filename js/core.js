@@ -86,9 +86,14 @@
   NQ.notionsById = {};
   (NQ.notions || []).forEach((n) => { NQ.notionsById[n.id] = n; });
 
+  // Banques : questions générales (ch1..ch4) + questions de campagne alignées sur les leçons (camp_*)
+  const BANKS = ['ch1', 'ch2', 'ch3', 'ch4', 'camp_ch1', 'camp_ch2a', 'camp_ch2b', 'camp_ch3', 'camp_ch4'];
+  let allCache = null;
   NQ.allItems = function () {
+    if (allCache) return allCache;
     const c = NQ.content || {};
-    return [1, 2, 3, 4].reduce((acc, k) => acc.concat(c['ch' + k] || []), []);
+    allCache = BANKS.reduce((acc, k) => acc.concat(c[k] || []), []);
+    return allCache;
   };
   NQ.GATE_TYPES = ['choix', 'calcul'];
   NQ.ROOM_TYPES = ['bug', 'ordre', 'assoc'];

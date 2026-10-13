@@ -29,13 +29,13 @@ Object.assign(window.NQ.lessons, {
   "title": "À quoi sert un autoencodeur",
   "p": [
     "Comme l'autoencodeur apprend un résumé compact (le code) de ses données, il sert partout où ce résumé est utile.",
-    "Compression : on stocke le code, plus petit que l'image. Réduction de dimensions : le code remplace les nombreuses variables d'origine, comme une ACP mais non linéaire.",
+    "Compression : on stocke le code, plus petit que l'image. Réduction de dimensions : le code remplace les nombreuses variables d'origine ; le cours (slide 11) compare l'ACP à un autoencodeur linéaire.",
     "Débruitage : on lui donne une image bruitée en entrée et l'image propre comme cible, il apprend à nettoyer.",
-    "Brique d'un autre réseau (pré-entraînement, extraction de caractéristiques, U-Net) et, au chapitre suivant, détection d'anomalies."
+    "Partie d'un réseau : un bloc encodeur / décodeur peut s'insérer dans une architecture plus grande, par exemple de compression."
   ],
   "ex": "Une image 28×28 (784 nombres) résumée en 32 nombres : on divise la taille par plus de 24 tout en pouvant la reconstruire approximativement.",
   "svg": "sablier",
-  "tip": "Les applications citées : compression, réduction de dimensions, débruitage, partie d'un réseau, détection d'anomalies."
+  "tip": "Les quatre applications citées (slides 10 à 13) : compression, réduction de dimensions, débruitage, partie d'un réseau. La détection d'anomalies fait l'objet d'une section à part."
 },
 "ae.unet": {
   "title": "U-Net, le réseau qui colorie chaque pixel",
@@ -86,21 +86,21 @@ Object.assign(window.NQ.lessons, {
   "title": "Repérer l'anormal par l'erreur de reconstruction",
   "p": [
     "Un détecteur de fumée ne connaît pas tous les incendies possibles : il connaît l'air normal et sonne quand ça ne lui ressemble plus.",
-    "On entraîne l'autoencodeur uniquement sur des données normales. Il apprend à bien les reconstruire.",
+    "L'autoencodeur apprend à bien reconstruire les données qu'il voit souvent : pour le cours (slide 26), une donnée « vue fréquemment » est normale. En pratique (lab), on l'entraîne sur des données normales uniquement.",
     "Face à une donnée jamais vue (une anomalie), il la reconstruit mal : l'erreur de reconstruction, L = (1/N) Σ (xᵢ − x̂ᵢ)² sur les N valeurs de l'échantillon, devient grande.",
     "Un seuil sur cette erreur tranche : en dessous, normal ; au-dessus, anomalie."
   ],
   "ex": "Dans le lab, le seuil suggéré vaut environ 0.13 : une séquence d'erreur 0.02 est classée normale, une séquence d'erreur 4.5 anormale. Utile quand les anomalies sont rares : 256 pannes sur environ 3 millions d'échantillons.",
   "svg": "anomalie",
-  "tip": "On n'entraîne QUE sur du normal ; sinon l'AE apprendrait aussi à reconstruire les anomalies, qui passeraient inaperçues."
+  "tip": "Faible erreur de reconstruction = donnée habituelle, normale ; grande erreur = donnée anormale. C'est le seuil sur cette erreur qui décide."
 },
 "ae.latent_bilan": {
   "title": "Tout repose sur un bon résumé : l'espace latent",
   "p": [
     "Le fil rouge du chapitre : un bon modèle d'image commence par résumer efficacement ses données. Ce résumé interne s'appelle l'espace latent.",
     "Avec la même idée encodeur → code → décodeur, on obtient de nombreuses architectures : segmentation, compression, reconstruction, débruitage.",
-    "Et pas seulement pour des images : les séries temporelles (le chapitre 4, avec des disques durs) utilisent le même principe.",
-    "On peut même apprendre le modèle lui-même : nnU-Net pour la configuration, optimisation bayésienne pour les hyperparamètres."
+    "Et pas seulement pour des images : le bilan insiste sur « d'autres applications non-image », comme les données tabulaires de la détection d'anomalies.",
+    "On peut même apprendre le modèle lui-même : c'est l'idée de nnU-Net, qui choisit automatiquement sa configuration."
   ],
   "ex": "Le même schéma sert à colorier un foie sur un scanner (U-Net) et à repérer un disque dur qui va tomber en panne (AE sur 16 jours × 21 mesures).",
   "svg": "sablier",
@@ -156,13 +156,13 @@ Object.assign(window.NQ.lessons, {
   "title": "La convolution 1D : une loupe qui glisse sur le temps",
   "p": [
     "Une convolution 2D fait glisser un petit filtre sur une image en hauteur et en largeur. Une convolution 1D le fait glisser sur un seul axe : le temps.",
-    "Le noyau (kernel) couvre plusieurs jours consécutifs et toutes les features à la fois ; il avance d'un jour à chaque pas.",
-    "Sans padding, la longueur de sortie vaut longueur d'entrée − taille du noyau + 1. Le nombre de colonnes de sortie est égal au nombre de filtres.",
+    "Le noyau (kernel) couvre plusieurs jours consécutifs et avance d'un jour à chaque pas. Sur le schéma du cours (slides 12-13), un noyau glisse le long de chaque feature.",
+    "Sans padding, la longueur de sortie vaut longueur d'entrée − taille du noyau + 1. Sur le schéma du cours, la sortie garde une colonne par feature ; en Keras, le nombre de colonnes de sortie est le nombre de filtres.",
     "MaxPooling1D(2) divise la longueur par 2, UpSampling1D(2) la multiplie par 2."
   ],
-  "ex": "Entrée (8 jours, 5 features), 5 filtres de kernel size 5 : 8 − 5 + 1 = 4 pas de temps, sortie (4, 5). Dans le lab : 16 → 8 → 4 → 8 → 16 avec pooling puis up-sampling.",
+  "ex": "Entrée (8 jours, 5 features), noyau de taille 5 glissant sur les jours : 8 − 5 + 1 = 4 positions, sortie (4, 5). Dans le lab : 16 → 8 → 4 → 8 → 16 avec pooling puis up-sampling.",
   "svg": "conv1d",
-  "tip": "Sortie = (L − k + 1, nombre de filtres) sans padding ; l'axe du temps vient en premier."
+  "tip": "Sans padding, la longueur devient L − k + 1 ; l'axe du temps vient en premier."
 },
 "ano.conv1d_vs_lstm": {
   "title": "AE Conv1D ou AE LSTM : lequel choisir",
@@ -219,7 +219,7 @@ Object.assign(window.NQ.lessons, {
     "Cette carte est un processus gaussien : pour chaque réglage, il prédit un score moyen et une incertitude. Une fonction d'acquisition choisit le prochain essai en équilibrant exploitation (zones prometteuses) et exploration (zones inconnues).",
     "Avec bayes_opt : BayesianOptimization(f, pbounds) puis maximize(init_points, n_iter), où init_points = essais aléatoires de départ et n_iter = essais guidés."
   ],
-  "ex": "lstm_width 68 et lr 0.0227 : la loss remonte et stagne vers 0.5 (divergence). lstm_width 116 et lr 0.0035 : la loss décroît régulièrement. Les bons modèles sont à learning rate faible (≈ 10⁻³) et grande largeur.",
+  "ex": "lstm_width 68 et lr 0.0227 : la loss remonte et stagne vers 0.5 (divergence). lstm_width 116 et lr 0.0035 : la loss décroît régulièrement. Sur la carte du slide 17, les bons modèles ont un learning rate faible (≈ 10⁻³) à petite comme à grande largeur : c'est le learning rate qui fait la différence. Le score « objective » affiché au slide 16 est à maximiser.",
   "svg": "bayes",
   "tip": "Optimisation bayésienne = moins d'entraînements qu'une grille, car chaque essai est choisi d'après les précédents."
 },

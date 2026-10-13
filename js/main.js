@@ -80,7 +80,9 @@
     if (cfg.mode === 'boss' && !cfg.chapter) cfg.chapter = 1;
     if (cfg.mode === 'campaign') cfg.chapter = (NQ.notionsById[cfg.notionFilter] || {}).ch || 1;
     lastCfg = cfg;
-    const ed = effDifficulty(cfg), D = DIFF[ed];
+    const ed = effDifficulty(cfg);
+    // Campagne : deux fois plus de temps que le niveau Découverte pour répondre (≈ 20 s puis 16 s par porte)
+    const D = cfg.mode === 'campaign' ? Object.assign({}, DIFF[ed], { speed: DIFF[ed].speed / 2, inc: DIFF[ed].inc / 2, max: DIFF[ed].max / 2 }) : DIFF[ed];
     const recent = p.codexRead[cfg.chapter] && Date.now() - p.codexRead[cfg.chapter] < SHIELD_WINDOW;
     const lives = cfg.mode === 'flash' || cfg.mode === 'campaign' ? null : cfg.mode === 'boss' ? 1 : D.lives;
     let all = cfg.mode === 'flash' ? [] : NQ.pool({ ch: cfg.chapter });

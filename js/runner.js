@@ -185,12 +185,21 @@ window.Runner = (function () {
       if (gate.g.position.z > 10) clearGate();
     }
 
+    // Effet de vitesse : champ de vision élargi, étoiles étirées, anneaux plus vifs pendant le boost
+    const fovTarget = boostFx ? 92 : 70, k = Math.min(1, dt * 5);
+    if (Math.abs(C.fov - fovTarget) > 0.05) { C.fov += (fovTarget - C.fov) * k; C.updateProjectionMatrix(); }
+    const starTarget = boostFx ? 0.7 : 0.25;
+    stars.material.size += (starTarget - stars.material.size) * k;
+    const ringScale = boostFx ? 1.35 : 1;
+    rings.forEach((r) => { r.scale.x += (ringScale - r.scale.x) * k; r.scale.y = r.scale.x; });
+
     shakeT = Math.max(0, shakeT - dt);
     C.position.x = (Math.random() - 0.5) * shakeT;
     C.position.y = 2.5 + (Math.random() - 0.5) * shakeT;
     R.render(S, C);
     return events;
   }
+  let boostFx = false;
 
   return {
     init, resize, update, setShip, spawnGate, clearGate, buildShip,
@@ -200,6 +209,7 @@ window.Runner = (function () {
     setLane(i) { lane = Math.max(0, Math.min(2, i)); },
     getLane() { return lane; },
     hasGate() { return !!gate; },
-    shake(t) { shakeT = t || 0.6; }
+    shake(t) { shakeT = t || 0.6; },
+    setBoostFx(on) { boostFx = !!on; }
   };
 })();

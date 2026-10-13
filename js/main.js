@@ -22,19 +22,24 @@
   let lastCfg = null;  // pour "Rejouer"
   let gameSeq = 0;     // invalide les callbacks asynchrones d'une partie abandonnée
   let paused = false;
-  let boost = false;   // accélération maintenue (↑ / W / Z ou bouton ⏩)
-  const BOOST = 2.5;   // multiplicateur de vitesse pendant l'accélération
+  let boost = false;      // accélération effective (uniquement pendant l'approche d'une porte)
+  let boostHeld = false;  // touche ↑ / W / Z ou bouton ⏩ maintenu
+  const BOOST = 2.5;      // multiplicateur de vitesse pendant l'accélération
   function setBoost(on) {
-    boost = !!on;
+    on = !!on && !!S && S.state === 'gate';
+    if (on === boost) return;
+    boost = on;
     document.body.classList.toggle('boost', boost);
     const b = $('bb'); if (b) b.classList.toggle('on', boost);
+    Runner.setBoostFx(boost);
+    NQ.audio.sfx.boost(boost);
   }
 
   const prof = () => NQ.store.profile;
 
   // ---------- Démarrage ----------
   function abortCurrent() {
-    MiniGames.abort(); Runner.clearGate(); UI.hideFeedback(); UI.closeAll(); S = null; setBoost(false);
+    MiniGames.abort(); Runner.clearGate(); UI.hideFeedback(); UI.closeAll(); S = null; boostHeld = false; setBoost(false);
   }
   function effDifficulty(cfg) { return cfg.mode === 'boss' ? 'expert' : cfg.difficulty; }
 
@@ -253,20 +258,24 @@
     if (!S) return;
     if (['ArrowLeft', 'a', 'A', 'q', 'Q'].indexOf(e.key) >= 0) Runner.moveLane(-1);
     else if (['ArrowRight', 'd', 'D'].indexOf(e.key) >= 0) Runner.moveLane(1);
-    else if (isBoostKey(e.key)) { e.preventDefault(); setBoost(true); }
+    else if (isBoostKey(e.key)) { e.preventDefault(); boostHeld = true; }
   }
   const isBoostKey = (k) => ['ArrowUp', 'w', 'W', 'z', 'Z'].indexOf(k) >= 0;
   function bindInputs() {
+    // Déblocage de l'audio (contexte créé / repris) au premier geste utilisateur
+    const unlock = () => { NQ.audio.unlock(); };
+    window.addEventListener('pointerdown', unlock, { passive: true });
+    window.addEventListener('keydown', unlock);
     window.addEventListener('keydown', onKey);
-    window.addEventListener('keyup', (e) => { if (isBoostKey(e.key)) setBoost(false); });
-    window.addEventListener('blur', () => setBoost(false));
+    window.addEventListener('keyup', (e) => { if (isBoostKey(e.key)) boostHeld = false; });
+    window.addEventListener('blur', () => { boostHeld = false; });
     const move = (d) => { if (S) Runner.moveLane(d); };
     $('bl').addEventListener('pointerdown', (e) => { e.preventDefault(); move(-1); });
     $('br').addEventListener('pointerdown', (e) => { e.preventDefault(); move(1); });
     // Bouton ⏩ : accélère tant qu'il est maintenu
     const bb = $('bb');
-    bb.addEventListener('pointerdown', (e) => { e.preventDefault(); setBoost(true); });
-    ['pointerup', 'pointercancel', 'pointerleave'].forEach((t) => bb.addEventListener(t, () => setBoost(false)));
+    bb.addEventListener('pointerdown', (e) => { e.preventDefault(); boostHeld = true; });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach((t) => bb.addEventListener(t, () => { boostHeld = false; }));
     bb.addEventListener('contextmenu', (e) => e.preventDefault());
     let tx = null;
     const stage = $('stage');
@@ -288,7 +297,9 @@
     requestAnimationFrame(loop);
     const dt = Math.min((now - lastT) / 1000, 0.05); lastT = now;
     // L'accélération ne s'applique que pendant l'approche d'une porte (pas en salle ni en feedback)
+    setBoost(boostHeld); // s'engage dès qu'une porte approche si la touche est maintenue, se coupe sinon
     if (S && S.state === 'gate') Runner.setSpeed(S.speed * (boost ? BOOST : 1));
+    else if (S && S.state === 'fb') Runner.setSpeed(S.speed);
     const events = Runner.update(paused ? 0 : dt);
     if (S && S.state === 'gate') events.forEach((ev) => { if (ev.type === 'gate' && S.state === 'gate') judgeGate(ev.lane); });
   }

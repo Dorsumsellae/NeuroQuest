@@ -180,8 +180,17 @@ window.UIViews = (function () {
       NQ.store.reset(); UI.applyEquipped(); closeModals(); UI.showMenu();
     });
     const mute = h('button', { class: 'btn seg' + (p.muted ? '' : ' on'), onclick: () => {
-      p.muted = !p.muted; NQ.store.save(); mute.textContent = p.muted ? '🔇 Son coupé' : '🔊 Son activé'; mute.classList.toggle('on', !p.muted);
-    } }, p.muted ? '🔇 Son coupé' : '🔊 Son activé');
+      p.muted = !p.muted; NQ.store.save(); mute.textContent = p.muted ? '🔇 Effets coupés' : '🔊 Effets activés'; mute.classList.toggle('on', !p.muted);
+    } }, p.muted ? '🔇 Effets coupés' : '🔊 Effets activés');
+    const musicBtn = h('button', { class: 'btn seg' + (p.music ? ' on' : ''), onclick: () => {
+      p.music = !p.music; NQ.store.save(); NQ.audio.music.toggle(p.music);
+      musicBtn.textContent = p.music ? '🎵 Musique activée' : '🎵 Musique coupée'; musicBtn.classList.toggle('on', p.music);
+    } }, p.music ? '🎵 Musique activée' : '🎵 Musique coupée');
+    const vibBtn = h('button', { class: 'btn seg' + (p.vibrate !== false ? ' on' : ''), onclick: () => {
+      p.vibrate = p.vibrate === false; NQ.store.save(); if (p.vibrate) NQ.audio.vibrate([80]);
+      vibBtn.textContent = p.vibrate ? '📳 Vibration activée' : '📳 Vibration coupée'; vibBtn.classList.toggle('on', p.vibrate);
+    } }, p.vibrate !== false ? '📳 Vibration activée' : '📳 Vibration coupée');
+    const soundRow = h('div', { class: 'seg-row' }, mute, musicBtn, vibBtn);
     const AUTO = [[0, 'Désactivée'], [5, '5 s'], [10, '10 s']];
     const autoRow = h('div', { class: 'seg-row' });
     const renderAuto = () => {
@@ -193,7 +202,9 @@ window.UIViews = (function () {
     };
     renderAuto();
     UI.showFrame('⚙ Options', h('div', { class: 'opts' },
-      h('label', null, 'Nom du joueur'), name, mute,
+      h('label', null, 'Nom du joueur'), name,
+      h('h3', null, 'Son et sensations'),
+      h('p', { class: 'hint' }, 'Musique d\'ambiance synthétisée (aucun fichier), effets sonores, et vibration du téléphone en cas d\'erreur.'), soundRow,
       h('h3', null, 'Reprise automatique après une réponse'),
       h('p', { class: 'hint' }, 'Le jeu continue tout seul après ce délai (ou dès que tu appuies sur Espace). En pause tant que le Codex est ouvert.'), autoRow,
       h('h3', null, 'Exporter la progression'), exp, h('button', { class: 'btn', onclick: copy }, 'Copier'),

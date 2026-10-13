@@ -48,6 +48,13 @@ La vitesse augmente à chaque bonne réponse jusqu'au plafond du niveau.
 
 Le feedback donne la bonne réponse, pourquoi elle est juste, pourquoi les autres sont fausses, et un bouton **Réviser dans le Codex** qui ouvre la section de la fiche correspondant à la notion. Le jeu reprend dès qu'on appuie sur Espace (ou Entrée, ou le bouton), et automatiquement après 5 secondes ; ce délai se règle dans les Options (désactivé, 5 s, 10 s) et se met en pause tant que le Codex est ouvert. C'est le cœur de l'apprentissage : l'erreur mène à la fiche, la fiche mène à la prochaine réussite.
 
+### Son et sensations
+
+- **Musique d'ambiance** synthétisée en direct (nappe et arpège sur quatre accords, aucun fichier audio), démarrée au premier clic ou à la première touche. Coupable dans Options.
+- **Effets sonores** : carillon de bonne réponse, grave d'erreur, souffle qui monte pendant l'accélération. Programmés sur l'horloge audio, donc sans décalage même quand le rendu est chargé.
+- **Effet de vitesse** pendant l'accélération : champ de vision élargi, étoiles étirées, anneaux dilatés, lignes de vitesse et vignette.
+- **Vibration** du téléphone en cas d'erreur (si le navigateur le permet). Désactivable dans Options.
+
 ## 3. Progression
 
 - **XP** : 10 × difficulté de l'épreuve (1 à 3) par porte réussie, 25 × difficulté par salle réussie, ×1,5 en Expert, multiplicateur de série (×2 à partir de 3 bonnes réponses d'affilée, ×3 à partir de 6).
@@ -70,6 +77,7 @@ content/notions.js         registre des 68 notions : id, chapitre, libellé, fic
 content/ch1.js … ch4.js    192 épreuves (134 choix, 24 calculs, 16 bugs, 9 ordres, 9 associations), JSON strict
 content/codex.js           fiches de révision, GÉNÉRÉ par tools/build_codex.py (ne pas éditer à la main)
 js/core.js                 état, sauvegarde, tirage pondéré des épreuves, maîtrise
+js/audio.js                sons, musique procédurale, souffle d'accélération, vibrations (Web Audio)
 js/progression.js          XP, paliers, récompenses du pass, skins de boss
 js/leaderboard.js          classement (interface submit / top ; implémentation locale)
 js/runner.js               scène three.js : tunnel, vaisseau, sillage, portes

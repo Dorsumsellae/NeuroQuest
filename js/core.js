@@ -42,7 +42,9 @@
     elite: false, bosses: { 1: false, 2: false, 3: false, 4: false },
     mastery: {}, codexRead: {},
     stats: { games: 0, best: 0, answers: 0, correct: 0 },
-    muted: false,
+    muted: false,     // effets sonores coupés
+    music: true,      // musique d'ambiance
+    vibrate: true,    // vibration sur mobile en cas d'erreur
     autoContinue: 5 // secondes avant reprise automatique après un feedback (0 = désactivé)
   });
   // Fusionne une source (localStorage / import) dans les valeurs par défaut
@@ -158,19 +160,10 @@
     store.save();
   };
 
-  // ---------- Sons (très simples) ----------
-  let AC;
-  NQ.beep = function (f, d, type) {
-    if (store.profile.muted) return;
-    try {
-      AC = AC || new (window.AudioContext || window.webkitAudioContext)();
-      const o = AC.createOscillator(), g = AC.createGain();
-      o.type = type || 'square'; o.frequency.value = f; g.gain.value = 0.04;
-      o.connect(g); g.connect(AC.destination); o.start(); o.stop(AC.currentTime + (d || 0.12));
-    } catch (e) { /* audio indisponible */ }
-  };
+  // ---------- Sons : délégués à js/audio.js (NQ.audio), chargé après ce fichier ----------
+  NQ.beep = function (f, d, type) { if (NQ.audio) NQ.audio.note(f, d || 0.12, type); };
   NQ.sfx = {
-    good() { NQ.beep(660); setTimeout(() => NQ.beep(880, 0.15), 90); },
-    bad() { NQ.beep(120, 0.3, 'sawtooth'); }
+    good() { if (NQ.audio) NQ.audio.sfx.good(); },
+    bad() { if (NQ.audio) NQ.audio.sfx.bad(); }
   };
 })();

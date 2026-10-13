@@ -215,6 +215,8 @@ window.UI = (function () {
     if (level >= 2) $('hintb').disabled = true;
   }
   function dimChip(i) { const c = $('opts').children[i]; if (c) c.classList.add('out'); }
+  // Compte à rebours affiché pendant l'approche d'une porte (boss)
+  function setTimer(txt) { const t = $('gtimer'); if (t && t.textContent !== txt) t.textContent = txt; }
   function flash(ok) {
     const f = $('flash'); f.textContent = ok ? '✅' : '❌'; f.className = 'show ' + (ok ? 'ok' : 'ko');
     clearTimeout(flashTimer); flashTimer = setTimeout(() => { f.className = ''; }, 600);
@@ -317,7 +319,7 @@ window.UI = (function () {
 
   return {
     init, showMenu, hideMenu, showHud, updateHud, setQuestion, flash,
-    showFeedback, hideFeedback, feedbackOpen, continueFeedback, pauseFeedback, showGameOver,
+    showFeedback, hideFeedback, feedbackOpen, continueFeedback, pauseFeedback, showGameOver, setTimer,
     openScreen, closeTop, closeAll, frame, showFrame, confirm: confirmDialog,
     applyEquipped, titleOf, CH_LABEL, DIFF_LABEL, DIFF_ORDER, showHint, dimChip,
     hasModal: () => stack.length > 0,

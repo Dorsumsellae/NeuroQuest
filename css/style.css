@@ -1139,3 +1139,6 @@ body.boost #stage::after { opacity: 1; animation: speedlines .25s linear infinit
 .name-card .hint.small { font-size: 12px; margin: 6px 0 0; }
 .name-card .col { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
 .name-card .col .btn { margin: 0; }
+/* Compte à rebours du boss */
+#gtimer { text-align: center; font-weight: 800; font-size: 18px; color: var(--gold); min-height: 0; }
+#gtimer:empty { display: none; }

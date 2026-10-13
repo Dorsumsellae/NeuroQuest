@@ -217,6 +217,7 @@ window.Runner = (function () {
     setLane(i) { lane = Math.max(0, Math.min(2, i)); },
     getLane() { return lane; },
     hasGate() { return !!gate; },
+    gateDistance() { return gate && !gate.judged ? -gate.g.position.z : 0; }, // distance restante avant la porte
     shake(t) { shakeT = t || 0.6; },
     setBoostFx(on) { boostFx = !!on; },
     // Indice : un panneau de mauvaise réponse devient presque transparent

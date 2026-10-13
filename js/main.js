@@ -82,7 +82,11 @@
     lastCfg = cfg;
     const ed = effDifficulty(cfg);
     // Campagne : deux fois plus de temps que le niveau Découverte pour répondre (≈ 20 s puis 16 s par porte)
-    const D = cfg.mode === 'campaign' ? Object.assign({}, DIFF[ed], { speed: DIFF[ed].speed / 2, inc: DIFF[ed].inc / 2, max: DIFF[ed].max / 2 }) : DIFF[ed];
+    // Boss : 1 minute par question (porte : 120 unités à vitesse 2 ; salle : chrono de 60 s), sans accélération
+    // progressive ; ↑ maintenue accélère fortement pour ne pas attendre quand on a déjà choisi.
+    const D = cfg.mode === 'campaign' ? Object.assign({}, DIFF[ed], { speed: DIFF[ed].speed / 2, inc: DIFF[ed].inc / 2, max: DIFF[ed].max / 2 })
+      : cfg.mode === 'boss' ? Object.assign({}, DIFF[ed], { speed: 2, inc: 0, max: 2, roomTimer: 60, boost: 12 })
+        : DIFF[ed];
     const recent = p.codexRead[cfg.chapter] && Date.now() - p.codexRead[cfg.chapter] < SHIELD_WINDOW;
     const lives = cfg.mode === 'flash' || cfg.mode === 'campaign' ? null : cfg.mode === 'boss' ? 1 : D.lives;
     let all = cfg.mode === 'flash' ? [] : NQ.pool({ ch: cfg.chapter });
@@ -419,7 +423,15 @@
     const dt = Math.min((now - lastT) / 1000, 0.05); lastT = now;
     // L'accélération ne s'applique que pendant l'approche d'une porte (pas en salle ni en feedback)
     setBoost(boostHeld); // s'engage dès qu'une porte approche si la touche est maintenue, se coupe sinon
-    if (S && S.state === 'gate') Runner.setSpeed(S.speed * (boost ? BOOST : 1) * (S.hintSlow || 1));
+    if (S && S.state === 'gate') {
+      Runner.setSpeed(S.speed * (boost ? (S.D.boost || BOOST) : 1) * (S.hintSlow || 1));
+      // Boss : temps restant affiché avant l'arrivée de la porte
+      if (S.cfg.mode === 'boss' && now - (S.lastTick || 0) > 250) {
+        S.lastTick = now;
+        const left = Math.max(0, Math.ceil(Runner.gateDistance() / (S.speed || 1)));
+        UI.setTimer('⏱ ' + left + ' s');
+      }
+    } else if (S && S.cfg.mode === 'boss') UI.setTimer('');
     else if (S && S.state === 'fb') Runner.setSpeed(S.speed);
     const events = Runner.update(paused ? 0 : dt);
     if (S && S.state === 'gate') events.forEach((ev) => { if (ev.type === 'gate' && S.state === 'gate') judgeGate(ev.lane); });

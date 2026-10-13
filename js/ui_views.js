@@ -264,7 +264,7 @@ window.UIViews = (function () {
   function bossSelect() {
     const p = NQ.store.profile, now = Date.now();
     const body = h('div', { class: 'boss-sel' }, h('p', { class: 'hint' },
-      '10 épreuves mixtes, vitesse Expert, 1 seule vie, pas d\'explication avant le bilan. Lis la fiche du chapitre dans les 30 minutes avant le combat pour obtenir un 🛡 bouclier (une erreur pardonnée). Victoire : skin unique, +200 XP, piste Élite.'));
+      '10 épreuves mixtes, 1 minute par question (↑ maintenue pour avancer plus vite), 1 seule vie, pas d\'explication avant le bilan. Lis la fiche du chapitre dans les 30 minutes avant le combat pour obtenir un 🛡 bouclier (une erreur pardonnée). Victoire : skin unique, +200 XP, piste Élite.'));
     [1, 2, 3, 4].forEach((c) => {
       const shield = p.codexRead[c] && now - p.codexRead[c] < 30 * 60000;
       body.appendChild(h('div', { class: 'boss-row' },

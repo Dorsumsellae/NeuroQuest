@@ -1,7 +1,10 @@
 // runner.js : scène three.js (tunnel, sol, étoiles, vaisseau, traînée, portes à 3 panneaux).
 window.Runner = (function () {
   'use strict';
-  const LANES = [-5, 0, 5];
+  // Écartement des couloirs : 5 unités sur un écran large, réduit en portrait pour rester visible
+  let laneGap = 5, baseFov = 70;
+  const laneX = (i) => (i - 1) * laneGap;
+  const SHIP_DIST = 8; // distance caméra → vaisseau sur l'axe z
   const GATE_START_Z = -120; // distance de départ d'une porte ; temps d'arrivée = 120 / vitesse
   let R, S, C, shipGroup, shipMesh, shipSkin = null;
   let rings = [], stars, starPos, floor;
@@ -99,9 +102,14 @@ window.Runner = (function () {
     const w = window.innerWidth, h = window.innerHeight;
     R.setSize(w, h);
     C.aspect = w / h;
-    C.fov = w / h < 0.8 ? 85 : 70; // portrait : champ plus large pour voir les 3 couloirs
-    C.updateProjectionMatrix();
+    baseFov = w / h < 0.8 ? 85 : 70; // portrait : champ plus large pour voir les 3 couloirs
+    C.fov = baseFov; C.updateProjectionMatrix();
+    // demi-largeur visible à la profondeur du vaisseau ; les couloirs extérieurs restent à ~60 % de celle-ci
+    const halfW = SHIP_DIST * Math.tan(baseFov * Math.PI / 360) * C.aspect;
+    laneGap = Math.max(2.4, Math.min(5, halfW * 0.6));
+    if (gate) gate.g.children.forEach((p, i) => { p.position.x = laneX(i); p.scale.setScalar(panelScale()); });
   }
+  const panelScale = () => Math.min(1, laneGap / 5 * 1.05);
 
   // ----- Panneaux de réponse (texture canvas) -----
   function wrap(ctx, text, w) {
@@ -138,7 +146,7 @@ window.Runner = (function () {
   function spawnGate(labels, colors) {
     clearGate();
     const g = new THREE.Group();
-    labels.forEach((t, i) => { const p = panel(t, colors[i]); p.position.set(LANES[i], 2, 0); g.add(p); });
+    labels.forEach((t, i) => { const p = panel(t, colors[i]); p.position.set(laneX(i), 2, 0); p.scale.setScalar(panelScale()); g.add(p); });
     g.position.z = GATE_START_Z; S.add(g);
     gate = { g, judged: false };
   }
@@ -169,7 +177,7 @@ window.Runner = (function () {
     for (let i = 0; i < 300; i++) { starPos[i * 3 + 2] += speed * dt; if (starPos[i * 3 + 2] > 10) starPos[i * 3 + 2] = -150; }
     stars.geometry.attributes.position.needsUpdate = true;
 
-    const tgt = LANES[lane];
+    const tgt = laneX(lane);
     shipGroup.position.x += (tgt - shipGroup.position.x) * Math.min(1, dt * 12);
     shipGroup.rotation.z = (shipGroup.position.x - tgt) * 0.15;
     shipGroup.position.y = 1 + Math.sin(clock * 6) * 0.08;
@@ -186,7 +194,7 @@ window.Runner = (function () {
     }
 
     // Effet de vitesse : champ de vision élargi, étoiles étirées, anneaux plus vifs pendant le boost
-    const fovTarget = boostFx ? 92 : 70, k = Math.min(1, dt * 5);
+    const fovTarget = boostFx ? baseFov + 22 : baseFov, k = Math.min(1, dt * 5);
     if (Math.abs(C.fov - fovTarget) > 0.05) { C.fov += (fovTarget - C.fov) * k; C.updateProjectionMatrix(); }
     const starTarget = boostFx ? 0.7 : 0.25;
     stars.material.size += (starTarget - stars.material.size) * k;

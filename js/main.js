@@ -272,7 +272,7 @@
     const lvl = NQ.prog.levelFor(prof().xp);
     if (lvl > S.lvl) { extra.push('⬆ Palier ' + lvl + ' atteint ! Récompense dans le Pass de combat.'); S.lvl = lvl; }
     return {
-      ok, headline: info.revealed ? '💡 Solution' : ok ? '✅ Juste !' : '❌ Raté', lines, item, extra, why: item.why, whyNot: item.whyNot,
+      ok, headline: info.revealed ? '💡 Solution' : ok ? '✅ Juste !' : '❌ Raté', lines, item, extra, plain: item.plain, why: item.why, whyNot: item.whyNot,
       solution: info.kind === 'room' ? MiniGames.solutionNode(item) : null
     };
   }

@@ -54,7 +54,7 @@ La vitesse augmente à chaque bonne réponse jusqu'au plafond du niveau.
 
 ### Après chaque réponse
 
-Le feedback donne la bonne réponse, pourquoi elle est juste, pourquoi les autres sont fausses, et un bouton **Réviser dans le Codex** qui ouvre la section de la fiche correspondant à la notion. Le jeu reprend dès qu'on appuie sur ↑ (ou Entrée, ou le bouton), et automatiquement après 5 secondes ; ce délai se règle dans les Options (désactivé, 5 s, 10 s) et se met en pause tant que le Codex est ouvert. C'est le cœur de l'apprentissage : l'erreur mène à la fiche, la fiche mène à la prochaine réussite.
+Le feedback commence par **💬 En clair** : une ou deux phrases en mots de tous les jours, souvent avec une image (une pente qu'on descend, un détecteur de fumée…). Viennent ensuite la version précise avec le vocabulaire du cours, pourquoi elle est juste, pourquoi les autres sont fausses, et un bouton **Réviser dans le Codex** qui ouvre la section de la fiche correspondant à la notion. Le jeu reprend dès qu'on appuie sur ↑ (ou Entrée, ou le bouton), et automatiquement après 5 secondes ; ce délai se règle dans les Options (désactivé, 5 s, 10 s) et se met en pause tant que le Codex est ouvert. C'est le cœur de l'apprentissage : l'erreur mène à la fiche, la fiche mène à la prochaine réussite.
 
 ### Son et sensations
 
@@ -118,7 +118,7 @@ python tools/build_codex.py
 
 Éditer `content/chN.js` en respectant le schéma (JSON strict, guillemets doubles, pas de virgule finale).
 
-Champs communs : `id` (unique, ex. `c2-72`), `type`, `ch` (1 à 4), `notions` (liste d'ids du registre), `diff` (1 à 3 : multiplie l'XP et le gain de maîtrise ; Découverte ne tire que les niveaux 1-2), `q` (question), `why` (pourquoi la bonne réponse est juste), `whyNot` (pourquoi les autres sont fausses), `ctx` optionnel (une ou deux phrases de contexte affichées au-dessus de la question : modèle, dataset, hypothèses).
+Champs communs : `id` (unique, ex. `c2-72`), `type`, `ch` (1 à 4), `notions` (liste d'ids du registre), `diff` (1 à 3 : multiplie l'XP et le gain de maîtrise ; Découverte ne tire que les niveaux 1-2), `q` (question), `plain` (explication en clair pour débutant, 45 mots maximum, affichée en premier), `why` (pourquoi la bonne réponse est juste, version précise), `whyNot` (pourquoi les autres sont fausses), `ctx` optionnel (une ou deux phrases de contexte affichées au-dessus de la question : modèle, dataset, hypothèses).
 
 | type | champs spécifiques | rendu |
 |---|---|---|

@@ -151,7 +151,8 @@ window.UI = (function () {
       (d.lines || []).forEach((l) => parts.push(h('p', { class: l.k || '' }, l.t)));
       if (d.solution) parts.push(d.solution);
       const gl = (t) => (window.UILesson ? UILesson.glossify(t) : t);
-      if (d.why) parts.push(h('p', { class: 'why' }, h('b', null, 'Explication : '), gl(d.why)));
+      if (d.plain) parts.push(h('p', { class: 'plain' }, h('b', null, '💬 En clair : '), gl(d.plain)));
+      if (d.why) parts.push(h('p', { class: 'why' }, h('b', null, d.plain ? 'Plus précisément : ' : 'Explication : '), gl(d.why)));
       if (d.whyNot) parts.push(h('p', { class: 'whynot' }, h('b', null, 'Pourquoi les autres sont faux : '), gl(d.whyNot)));
       (d.extra || []).forEach((t) => parts.push(h('p', { class: 'extra' }, t)));
       const go = h('button', { class: 'btn primary', id: 'go', onclick: continueFeedback }, 'Continuer ▶ (↑)');
@@ -194,7 +195,9 @@ window.UI = (function () {
     hideFeedback(); showHud(false);
     const recap = r.recap.map((e) => h('details', { class: 'rec ' + (e.ok ? 'ok' : 'ko'), open: !e.ok && !r.full ? true : null },
       h('summary', null, (e.ok ? '✅ ' : '❌ ') + e.item.q),
-      (r.full || !e.ok) ? h('div', null, h('p', null, h('b', null, 'Explication : '), e.item.why),
+      (r.full || !e.ok) ? h('div', null,
+        e.item.plain ? h('p', { class: 'plain' }, h('b', null, '💬 En clair : '), e.item.plain) : null,
+        h('p', null, h('b', null, e.item.plain ? 'Plus précisément : ' : 'Explication : '), e.item.why),
         e.item.whyNot ? h('p', null, h('b', null, 'Pourquoi les autres sont faux : '), e.item.whyNot) : null,
         h('button', { class: 'btn small', onclick: () => UICodex.open({ notionId: e.item.notions[0], resume: true }) }, '📖 Codex')) : null));
     const unlocks = r.unlocks.length ? h('div', { class: 'unlocks' }, h('b', null, '🎁 Débloqué : '),

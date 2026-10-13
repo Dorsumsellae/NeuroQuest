@@ -1109,3 +1109,7 @@ body.boost #stage::after { opacity: 1; animation: speedlines .25s linear infinit
 .camp-step.done span { color: var(--mut); }
 .camp-step.cur { background: #1a2a6c; }
 .camp-step.lock span { opacity: .45; }
+
+/* ---- Explication « en clair » ---- */
+.plain { background: #0f2a1c; border-left: 3px solid #33ff99; border-radius: 6px; padding: 6px 10px; font-size: 1.05em; line-height: 1.5; }
+.plain b { color: #33ff99; }

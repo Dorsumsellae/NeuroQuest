@@ -61,6 +61,10 @@ def main() -> int:
                 covered.setdefault(nid, []).append(qid)
             if not q.get("q") or not q.get("why"):
                 errors.append(f"{qid} : q ou why manquant")
+            if not q.get("plain"):
+                warnings.append(f"{qid} : explication « en clair » (plain) manquante")
+            elif len(q["plain"].split()) > 55:
+                warnings.append(f"{qid} : plain trop long ({len(q['plain'].split())} mots)")
             if t in ("choix", "calcul"):
                 ok, ko = q.get("ok"), q.get("ko", [])
                 if not ok or len(ko) != 2:

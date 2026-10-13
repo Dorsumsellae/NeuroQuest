@@ -79,31 +79,44 @@ window.MiniGames = (function () {
       if (ctx.done) return;
       const j = pos + d; [order[pos], order[j]] = [order[j], order[pos]]; render();
     }
-    // Glisser-déposer (souris et tactile) via la poignée ⠿ : la ligne suit le pointeur,
-    // les autres lignes s'écartent ; l'ordre est relu depuis le DOM au relâchement.
+    // Glisser-déposer (souris et tactile). On saisit la ligne par sa poignée ⠿ (ou, à la souris, par
+    // n'importe où sauf les boutons). Les mouvements sont écoutés sur toute la fenêtre : déplacer la
+    // ligne dans la liste pendant le glissement ne doit pas interrompre le suivi du pointeur.
     function attachDrag(row, grip) {
-      grip.addEventListener('pointerdown', (e) => {
-        if (ctx.done) return;
+      const begin = (e) => {
+        if (ctx.done || (e.button != null && e.button !== 0)) return;
+        if (e.target.closest('button')) return;
+        if (e.pointerType !== 'mouse' && !e.target.closest('.grip')) return; // tactile : poignée seulement (le reste fait défiler)
         e.preventDefault();
-        try { grip.setPointerCapture(e.pointerId); } catch (err) { /* capture non supportée : le drag suit quand même le pointeur sur la poignée */ }
-        row.classList.add('drag');
+        const startY = e.clientY;
+        let dragging = false;
         const onMove = (ev) => {
+          if (ev.pointerId !== e.pointerId) return;
+          if (!dragging) {
+            if (Math.abs(ev.clientY - startY) < 4) return; // petit seuil : un simple clic ne déclenche rien
+            dragging = true; row.classList.add('drag'); list.classList.add('dragging');
+          }
+          ev.preventDefault();
           const others = Array.prototype.filter.call(list.children, (r) => r !== row);
           const before = others.find((r) => { const b = r.getBoundingClientRect(); return ev.clientY < b.top + b.height / 2; });
-          if (before) list.insertBefore(row, before); else list.appendChild(row);
+          if (before) { if (row.nextSibling !== before) list.insertBefore(row, before); } else if (list.lastChild !== row) list.appendChild(row);
           Array.prototype.forEach.call(list.children, (r, i) => { r.querySelector('.ln').textContent = String(i + 1); });
         };
         const onUp = (ev) => {
-          grip.removeEventListener('pointermove', onMove); grip.removeEventListener('pointerup', onUp); grip.removeEventListener('pointercancel', onUp);
-          try { grip.releasePointerCapture(ev.pointerId); } catch (err) { /* déjà relâché */ }
-          row.classList.remove('drag');
+          if (ev.pointerId !== e.pointerId) return;
+          window.removeEventListener('pointermove', onMove);
+          window.removeEventListener('pointerup', onUp);
+          window.removeEventListener('pointercancel', onUp);
+          row.classList.remove('drag'); list.classList.remove('dragging');
+          if (!dragging || ctx.done) return;
           order = Array.prototype.map.call(list.children, (r) => +r.getAttribute('data-idx'));
           render();
         };
-        grip.addEventListener('pointermove', onMove);
-        grip.addEventListener('pointerup', onUp);
-        grip.addEventListener('pointercancel', onUp);
-      });
+        window.addEventListener('pointermove', onMove, { passive: false });
+        window.addEventListener('pointerup', onUp);
+        window.addEventListener('pointercancel', onUp);
+      };
+      row.addEventListener('pointerdown', begin);
     }
     function validate(timeout) {
       const chosen = order.map((i) => it.items[i]);
@@ -123,7 +136,7 @@ window.MiniGames = (function () {
       return 'Le premier élément est placé : « ' + it.items[0] + ' ».';
     };
     ctx.footer.appendChild(h('button', { class: 'btn primary', onclick: () => validate(false) }, 'Valider'));
-    ctx.hint.textContent = 'Glisse les lignes par la poignée ⠿ (ou utilise ▲ ▼) pour les remettre dans le bon ordre.';
+    ctx.hint.textContent = 'Glisse les lignes pour les remettre dans le bon ordre (au doigt : par la poignée ⠿), ou utilise ▲ ▼.';
     render();
     return list;
   }

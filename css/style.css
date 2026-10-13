@@ -1124,3 +1124,8 @@ body.boost #stage::after { opacity: 1; animation: speedlines .25s linear infinit
 .name-card h2 { margin: 0 0 6px; color: var(--gold); }
 .name-card .txt { width: 100%; box-sizing: border-box; font-size: 18px; padding: 10px 12px; margin: 8px 0 2px; text-align: center; }
 .name-card .row { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
+/* Glisser-déposer : ligne saisissable à la souris, poignée plus grande au doigt, pas de sélection de texte */
+.ord-row { cursor: grab; user-select: none; -webkit-user-select: none; }
+.ord-row .grip { font-size: 24px; padding: 6px 8px; }
+.ord-list.dragging, .ord-list.dragging * { cursor: grabbing; }
+.ord-row.drag { transform: scale(1.02); position: relative; z-index: 2; }

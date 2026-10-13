@@ -1055,3 +1055,24 @@ body.boost #stage::after { opacity: 1; animation: speedlines .25s linear infinit
 #sol { display: block; margin: 6px auto 0; pointer-events: auto; min-width: 0; font-size: 13px; padding: 6px 14px; border-radius: 10px; background: #0b1030aa; border: 2px solid var(--line); color: var(--mut); }
 #sol:hover { color: #fff; border-color: var(--gold); }
 #sol[hidden] { display: none; }
+
+/* ---- Micro-leçons ---- */
+#lesson { position: fixed; inset: 0; z-index: 45; display: none; background: #05060ff2; overflow-y: auto; padding: 16px 12px; }
+#lesson.open { display: block; }
+.lesson-card { max-width: 640px; margin: 0 auto; background: var(--panel); border: 2px solid var(--blue); border-radius: 16px; padding: 18px 20px; box-shadow: 0 0 30px #33aaff44; }
+.lesson-head small { color: var(--gold); letter-spacing: 2px; text-transform: uppercase; font-size: 12px; }
+.lesson-head h2 { margin: 4px 0 2px; font-size: 24px; color: #fff; }
+.lesson-head em { color: var(--mut); font-size: 13px; font-style: normal; }
+.lesson-svg { margin: 14px 0 6px; text-align: center; }
+.lsvg { width: 100%; max-width: 320px; height: auto; }
+.lesson-body p { line-height: 1.55; margin: 8px 0; font-size: 16px; }
+.lesson-ex { background: #02040d; border-left: 3px solid var(--blue); border-radius: 8px; padding: 10px 12px; margin: 12px 0; line-height: 1.5; }
+.lesson-tip { background: #2a2205; border: 1px solid var(--gold); border-radius: 8px; padding: 10px 12px; margin: 12px 0; line-height: 1.5; }
+.lesson-card .row { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; margin-top: 14px; }
+
+/* ---- Glossaire au toucher ---- */
+.term { border-bottom: 2px dotted var(--gold); cursor: help; color: inherit; }
+.term:hover, .term.open { color: var(--gold); }
+.tip { position: fixed; z-index: 80; background: #0b1030; border: 2px solid var(--gold); border-radius: 10px; padding: 10px 12px; box-shadow: 0 6px 24px #000c; font-size: 14px; line-height: 1.45; }
+.tip b { color: var(--gold); } .tip p { margin: 4px 0 0; }
+#q .term, .room-q .term { border-bottom-width: 2px; }

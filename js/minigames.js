@@ -184,7 +184,7 @@ window.MiniGames = (function () {
       const builder = { bug: buildBug, ordre: buildOrdre, assoc: buildAssoc }[item.type];
       const body = builder(ctx);
       ctx.footer.appendChild(h('button', { class: 'btn ghost', onclick: giveUp }, '💡 Solution (Espace)'));
-      const card = h('div', { class: 'room-card' }, head, item.ctx ? h('p', { class: 'ctx' }, item.ctx) : null, h('p', { class: 'room-q' }, item.q), ctx.hint, body, ctx.footer);
+      const card = h('div', { class: 'room-card' }, head, item.ctx ? h('p', { class: 'ctx' }, item.ctx) : null, h('p', { class: 'room-q' }, window.UILesson ? UILesson.glossify(item.q) : item.q), ctx.hint, body, ctx.footer);
       root.innerHTML = ''; root.appendChild(card); root.classList.add('open'); root.scrollTop = 0;
       current = ctx;
       if (timerSeconds) {

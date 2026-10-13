@@ -113,7 +113,8 @@ window.UI = (function () {
   // data: {q, code, chips:[{text,color}]} ou null pour vider
   function setQuestion(d) {
     const cx = $('ctx'); cx.textContent = d && d.ctx ? d.ctx : ''; cx.style.display = d && d.ctx ? '' : 'none';
-    $('q').textContent = d ? d.q : '';
+    $('q').textContent = '';
+    if (d) $('q').appendChild(window.UILesson ? UILesson.glossify(d.q) : document.createTextNode(d.q));
     $('q').style.display = d ? '' : 'none';
     const code = $('qcode');
     code.textContent = d && d.code ? d.code : '';
@@ -138,8 +139,9 @@ window.UI = (function () {
       const parts = [h('div', { class: 'fb-title' }, d.headline)];
       (d.lines || []).forEach((l) => parts.push(h('p', { class: l.k || '' }, l.t)));
       if (d.solution) parts.push(d.solution);
-      if (d.why) parts.push(h('p', { class: 'why' }, h('b', null, 'Explication : '), d.why));
-      if (d.whyNot) parts.push(h('p', { class: 'whynot' }, h('b', null, 'Pourquoi les autres sont faux : '), d.whyNot));
+      const gl = (t) => (window.UILesson ? UILesson.glossify(t) : t);
+      if (d.why) parts.push(h('p', { class: 'why' }, h('b', null, 'Explication : '), gl(d.why)));
+      if (d.whyNot) parts.push(h('p', { class: 'whynot' }, h('b', null, 'Pourquoi les autres sont faux : '), gl(d.whyNot)));
       (d.extra || []).forEach((t) => parts.push(h('p', { class: 'extra' }, t)));
       const go = h('button', { class: 'btn primary', id: 'go', onclick: continueFeedback }, 'Continuer ▶ (↑)');
       const box = h('div', { class: 'fb-box ' + (d.ok ? 'ok' : 'ko') }, parts,

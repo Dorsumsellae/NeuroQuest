@@ -40,6 +40,7 @@
   // ---------- Démarrage ----------
   function abortCurrent() {
     MiniGames.abort(); Runner.clearGate(); UI.hideFeedback(); UI.closeAll(); S = null; boostHeld = false; setBoost(false);
+    if (UILesson.isOpen()) UILesson.close();
   }
   function effDifficulty(cfg) { return cfg.mode === 'boss' ? 'expert' : cfg.difficulty; }
 
@@ -118,6 +119,16 @@
   function next() {
     if (!S) return;
     const item = nextItem();
+    // Première rencontre d'une notion (hors boss) : micro-leçon avant l'épreuve, runner en pause
+    if (S.cfg.mode !== 'boss' && UILesson.pendingFor(item).length) {
+      const id = S.id;
+      S.state = 'lesson'; UI.setQuestion(null); Runner.setSpeed(0);
+      UILesson.showPending(item).then(() => { if (S && S.id === id) { Runner.setSpeed(S.speed); present(item); } });
+      return;
+    }
+    present(item);
+  }
+  function present(item) {
     S.cur = item; S.recent.push(item.id);
     // Pas de répétition dans une session tant que le pool le permet
     const cap = Math.max(4, (S.cfg.mode === 'flash' ? S.gatePool.length : S.pool.length) - 1);
@@ -258,16 +269,19 @@
     if (e.key === 'Escape') { if (!UI.cancelDialog()) UI.closeTop(); return; }
     if (t === 'INPUT' || t === 'TEXTAREA') return;
     if (UI.hasModal()) return;
+    if (UILesson.isOpen() && e.key !== ' ' && !isBoostKey(e.key) && e.key !== 'Enter') return;
     if (e.key === ' ') { // Espace : pause et solution (porte ou salle)
       e.preventDefault();
+      if (UILesson.isOpen()) return;
       if (e.repeat || !S) return;
       if (MiniGames.isOpen()) MiniGames.giveUp();
       else if (S.state === 'gate') revealGate();
       return;
     }
-    if (isBoostKey(e.key) || e.key === 'Enter') { // ↑ : passer (feedback) ; maintenu pendant une porte : accélérer
+    if (isBoostKey(e.key) || e.key === 'Enter') { // ↑ : passer (feedback, leçon) ; maintenu pendant une porte : accélérer
       if (e.key !== 'Enter') e.preventDefault();
       if (e.repeat) return; // une touche gardée enfoncée ne doit pas sauter le feedback suivant
+      if (UILesson.isOpen()) { UILesson.close(); return; }
       if (UI.feedbackOpen()) { UI.continueFeedback(); return; }
       if (e.key !== 'Enter' && S && !MiniGames.isOpen()) boostHeld = true;
       return;
@@ -334,6 +348,7 @@
     UI.applyEquipped();
     Runner.setSpeed(IDLE_SPEED);
     bindInputs();
+    UILesson.bindGlossary();
     UI.showMenu();
     requestAnimationFrame(loop);
   }

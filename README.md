@@ -12,7 +12,7 @@ Le contenu couvre les quatre chapitres du cours : régressions et descente de gr
 
 - **PC** : double-cliquer sur `index.html` (Chrome ou Edge). Aucune installation, aucun serveur, fonctionne hors ligne.
 - **Téléphone** : copier le dossier complet sur le téléphone et ouvrir `index.html`, ou déposer le dossier sur n'importe quel hébergement statique (GitHub Pages, Netlify…) et ouvrir le lien.
-- **Commandes** : ← → (ou A / D, Q / D) pour changer de couloir, Espace ou Entrée pour continuer, Échap pour fermer une fenêtre. Sur mobile : balayer vers la gauche ou la droite, ou utiliser les boutons ◀ ▶.
+- **Commandes** : ← → (ou A / D, Q / D) pour changer de couloir, ↑ (ou W / Z) maintenue pour accélérer vers la porte quand on connaît déjà la réponse, Espace ou Entrée pour continuer, Échap pour fermer une fenêtre. Sur mobile : balayer vers la gauche ou la droite, ou utiliser les boutons ◀ ▶, et maintenir ⏩ pour accélérer.
 
 La sauvegarde est dans le navigateur (localStorage). Pour changer d'appareil : Options → Exporter, puis Options → Importer sur l'autre appareil.
 

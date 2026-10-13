@@ -97,7 +97,7 @@ window.UI = (function () {
         h('button', { class: 'btn', onclick: () => UIViews.pass() }, '🎖 Pass de combat'),
         h('button', { class: 'btn', onclick: () => UIViews.leaderboard() }, '🏆 Classement'),
         h('button', { class: 'btn', onclick: () => UIViews.options() }, '⚙ Options')),
-      h('p', { class: 'keys' }, '← → ou A/D (Q) pour changer de couloir · Espace pour continuer · Échap pour fermer')));
+      h('p', { class: 'keys' }, '← → ou A/D (Q) pour changer de couloir · ↑ ou W/Z maintenu pour accélérer · Espace pour continuer · Échap pour fermer')));
     menu.classList.add('open'); $('hud').hidden = true; $('pads').hidden = true;
   }
   function hideMenu() { $('menu').classList.remove('open'); }

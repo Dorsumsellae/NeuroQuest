@@ -22,12 +22,19 @@
   let lastCfg = null;  // pour "Rejouer"
   let gameSeq = 0;     // invalide les callbacks asynchrones d'une partie abandonnée
   let paused = false;
+  let boost = false;   // accélération maintenue (↑ / W / Z ou bouton ⏩)
+  const BOOST = 2.5;   // multiplicateur de vitesse pendant l'accélération
+  function setBoost(on) {
+    boost = !!on;
+    document.body.classList.toggle('boost', boost);
+    const b = $('bb'); if (b) b.classList.toggle('on', boost);
+  }
 
   const prof = () => NQ.store.profile;
 
   // ---------- Démarrage ----------
   function abortCurrent() {
-    MiniGames.abort(); Runner.clearGate(); UI.hideFeedback(); UI.closeAll(); S = null;
+    MiniGames.abort(); Runner.clearGate(); UI.hideFeedback(); UI.closeAll(); S = null; setBoost(false);
   }
   function effDifficulty(cfg) { return cfg.mode === 'boss' ? 'expert' : cfg.difficulty; }
 
@@ -246,12 +253,21 @@
     if (!S) return;
     if (['ArrowLeft', 'a', 'A', 'q', 'Q'].indexOf(e.key) >= 0) Runner.moveLane(-1);
     else if (['ArrowRight', 'd', 'D'].indexOf(e.key) >= 0) Runner.moveLane(1);
+    else if (isBoostKey(e.key)) { e.preventDefault(); setBoost(true); }
   }
+  const isBoostKey = (k) => ['ArrowUp', 'w', 'W', 'z', 'Z'].indexOf(k) >= 0;
   function bindInputs() {
     window.addEventListener('keydown', onKey);
+    window.addEventListener('keyup', (e) => { if (isBoostKey(e.key)) setBoost(false); });
+    window.addEventListener('blur', () => setBoost(false));
     const move = (d) => { if (S) Runner.moveLane(d); };
     $('bl').addEventListener('pointerdown', (e) => { e.preventDefault(); move(-1); });
     $('br').addEventListener('pointerdown', (e) => { e.preventDefault(); move(1); });
+    // Bouton ⏩ : accélère tant qu'il est maintenu
+    const bb = $('bb');
+    bb.addEventListener('pointerdown', (e) => { e.preventDefault(); setBoost(true); });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach((t) => bb.addEventListener(t, () => setBoost(false)));
+    bb.addEventListener('contextmenu', (e) => e.preventDefault());
     let tx = null;
     const stage = $('stage');
     stage.addEventListener('touchstart', (e) => { tx = e.touches[0].clientX; }, { passive: true });
@@ -271,6 +287,8 @@
   function loop(now) {
     requestAnimationFrame(loop);
     const dt = Math.min((now - lastT) / 1000, 0.05); lastT = now;
+    // L'accélération ne s'applique que pendant l'approche d'une porte (pas en salle ni en feedback)
+    if (S && S.state === 'gate') Runner.setSpeed(S.speed * (boost ? BOOST : 1));
     const events = Runner.update(paused ? 0 : dt);
     if (S && S.state === 'gate') events.forEach((ev) => { if (ev.type === 'gate' && S.state === 'gate') judgeGate(ev.lane); });
   }

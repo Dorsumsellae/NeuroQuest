@@ -203,7 +203,12 @@ small {
   background: #0b1030aa;
   border: 2px solid var(--line);
   touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
 }
+#bb { width: 64px; opacity: .75; }
+#bb.on, body.boost #bb { border-color: var(--gold); box-shadow: 0 0 14px var(--gold); opacity: 1; }
+body.boost #st::after { content: ' ⏩'; color: var(--gold); }
 #flash {
   position: fixed;
   z-index: 12;

@@ -225,7 +225,7 @@ window.UIViews = (function () {
   // une étape s'ouvre quand la précédente est validée. Les étapes validées restent rejouables.
   function campaign() {
     const body = h('div', { class: 'camp' }, h('p', { class: 'hint' },
-      'Chaque étape = la leçon d\'une notion, puis jusqu'à 3 questions faciles dessus (au plus 1 erreur sur 3 pour valider, aucune s'il y en a moins). Pas de vies, indices et solution autorisés. Quand un chapitre est terminé, son boss vous attend.'));
+      'Chaque étape = la leçon d\'une notion, puis jusqu\'à 3 questions faciles dessus (au plus 1 erreur sur 3 pour valider, aucune s\'il y en a moins). Pas de vies, indices et solution autorisés. Quand un chapitre est terminé, son boss vous attend.'));
     const start = (id) => { closeModals(); UI.handlers().startGame({ mode: 'campaign', notionFilter: id }); };
     [1, 2, 3, 4].forEach((c) => {
       const steps = NQ.campaign.steps(c), cur = NQ.campaign.current(c), pr = NQ.campaign.progress(c);

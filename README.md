@@ -139,11 +139,18 @@ Exemple :
  "whyNot":"Un η trop petit ralentit sans faire diverger ; le nombre d'échantillons ne change pas le sens de la descente."}
 ```
 
+Règles de rédaction :
+- **Tester un concept, pas un exemple** : la question doit être répondable par quelqu'un qui a compris la notion, sans avoir mémorisé un dataset, une figure ou un chiffre du cours. Toutes les données utiles vont dans `q`, `ctx` ou `code`.
+- **Calculs faisables de tête** (pas de calculatrice au contrôle) : petits nombres, ou bien faire reconnaître l'expression (« 784 × 128 + 128 ») plutôt que son résultat.
+- Questions de campagne (`content/camp_*.js`, `"camp": true`) : 3 par notion, dans l'ordre idée, compréhension, piège.
+
 Puis valider :
 
 ```
 python tools/check_content.py
 ```
+
+Les audits de contenu (contre les PDF du cours) sont dans `docs/audit/`. `node tools/apply_audit.js --prefix=<rapport>` affiche les correctifs proposés par un rapport, `--apply` les applique.
 
 Le validateur vérifie le schéma, l'unicité des ids, l'existence des notions référencées, la couverture de toutes les notions par au moins une épreuve, l'absence de la bonne réponse parmi les mauvaises, et la validité de l'index de ligne des bugs.
 

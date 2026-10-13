@@ -60,7 +60,7 @@ Publier les règles.
 
 ## 4. Index
 
-La première ouverture du classement avec un filtre de difficulté affichera dans la console du navigateur un lien « The query requires an index » : cliquer dessus, Firebase crée l'index composite (`difficulty` croissant, `score` décroissant) en une minute. On peut aussi le créer à la main dans **Firestore → Index**.
+Aucun index à créer : le jeu filtre par difficulté côté serveur (index automatique sur un seul champ) et trie côté client. Si un jour la collection dépasse quelques centaines de scores par difficulté, on pourra créer l'index composite (`difficulty` croissant, `score` décroissant) dans **Firestore → Index** et remettre le tri côté serveur dans `js/leaderboard.js`.
 
 ## 5. Vérifier
 

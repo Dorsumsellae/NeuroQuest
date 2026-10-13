@@ -56,14 +56,16 @@ NQ.leaderboard = (function () {
   const shared = {
     submit(entry) {
       const e = clean(entry);
-      return db().then((d) => d.collection('scores').add(Object.assign(e, { ts: Date.now() })));
+      return db().then((d) => d.collection('scores').add(Object.assign(e, { ts: Date.now() }))).then(() => undefined);
     },
+    // Filtre par difficulté sans tri serveur (évite l'index composite difficulty + score, qui
+    // doit être créé à la main dans la console) ; le tri et la coupe se font côté client.
     top(n, difficulty) {
       return db().then((d) => {
         let q = d.collection('scores');
         if (difficulty) q = q.where('difficulty', '==', difficulty);
-        return q.orderBy('score', 'desc').limit(n || 20).get();
-      }).then((snap) => snap.docs.map((doc) => clean(doc.data())));
+        return q.limit(500).get();
+      }).then((snap) => snap.docs.map((doc) => clean(doc.data())).sort((a, b) => b.score - a.score).slice(0, n || 20));
     }
   };
 

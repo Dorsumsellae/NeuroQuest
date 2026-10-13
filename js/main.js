@@ -129,7 +129,7 @@
     present(item);
   }
   function present(item) {
-    S.cur = item; S.recent.push(item.id);
+    S.cur = item; S.recent.push(item.id); S.itemHints = 0; S.hintSlow = 1;
     // Pas de répétition dans une session tant que le pool le permet
     const cap = Math.max(4, (S.cfg.mode === 'flash' ? S.gatePool.length : S.pool.length) - 1);
     if (S.recent.length > cap) S.recent.shift();
@@ -141,7 +141,7 @@
     const answers = NQ.shuffle([{ t: item.ok, ok: true }, { t: item.ko[0] }, { t: item.ko[1] }]);
     S.answers = answers; S.okLane = answers.findIndex((a) => a.ok); S.state = 'gate';
     Runner.spawnGate(answers.map((a) => a.t), COLS); Runner.setSpeed(S.speed);
-    UI.setQuestion({ q: item.q, ctx: item.ctx, code: item.code, chips: answers.map((a, i) => ({ text: a.t, color: COLS[i] })) });
+    UI.setQuestion({ q: item.q, ctx: item.ctx, code: item.code, noHelp: S.cfg.mode === 'boss', chips: answers.map((a, i) => ({ text: a.t, color: COLS[i] })) });
   }
 
   function startRoom(item) {
@@ -149,17 +149,41 @@
     S.state = 'room'; S.rooms++;
     UI.setQuestion(null); Runner.setSpeed(S.speed * 0.5); refreshHud();
     const timer = S.cfg.mode === 'flash' ? 0 : S.D.roomTimer;
-    MiniGames.run(item, { timerSeconds: timer }).then((res) => {
+    MiniGames.run(item, { timerSeconds: timer, hintText: hintTextFor(item), noHelp: S.cfg.mode === 'boss' }).then((res) => {
       if (!S || S.id !== id || res.aborted) return;
-      resolveItem(item, res.ok, { kind: 'room', timeout: res.timeout, revealed: !!res.revealed });
+      resolveItem(item, res.ok, { kind: 'room', timeout: res.timeout, revealed: !!res.revealed, hints: res.hints || 0 });
     });
   }
 
   // ---------- Jugement ----------
   function judgeGate(lane) {
     const ok = lane === S.okLane;
-    resolveItem(S.cur, ok, { kind: 'gate', chosen: S.answers[lane].t });
+    resolveItem(S.cur, ok, { kind: 'gate', chosen: S.answers[lane].t, hints: S.itemHints || 0 });
   }
+
+  // ---------- Indices ----------
+  // Texte du 1er indice : la phrase à retenir de la leçon de la notion, sinon son intitulé
+  function hintTextFor(item) {
+    const id = (item.notions || []).find((n) => NQ.lessons && NQ.lessons[n]) || item.notions[0];
+    const L = NQ.lessons && NQ.lessons[id];
+    if (L && L.tip) return L.tip;
+    const n = NQ.notionsById[id];
+    return n ? 'Pense à la notion : ' + n.label + '.' : 'Relis attentivement chaque proposition.';
+  }
+  // 1er indice : rappel de la notion + porte ralentie ; 2e indice : une mauvaise réponse est éliminée
+  function hint() {
+    if (!S || S.cfg.mode === 'boss') return;
+    if (MiniGames.isOpen()) { MiniGames.hint(); return; }
+    if (S.state !== 'gate' || S.itemHints >= 2) return;
+    S.itemHints++;
+    if (S.itemHints === 1) { S.hintSlow = 0.5; UI.showHint(hintTextFor(S.cur), 1); return; }
+    const wrong = [0, 1, 2].filter((i) => i !== S.okLane);
+    const cur = Runner.getLane();
+    const out = wrong.indexOf(cur) >= 0 ? cur : wrong[Math.floor(Math.random() * wrong.length)];
+    S.eliminated = out; Runner.dimPanel(out); UI.dimChip(out);
+    UI.showHint('Une mauvaise réponse est éliminée : « ' + S.answers[out].t + ' ».', 2);
+  }
+  const HINT_FACTOR = [1, 0.6, 0.3]; // part d'XP et de score gardée selon le nombre d'indices
 
   function checkEnd() {
     const c = S.cfg;
@@ -172,13 +196,14 @@
 
   function resolveItem(item, ok, info) {
     const p = prof(), room = info.kind === 'room', id = S.id;
-    S.state = 'fb'; $('sol').hidden = true;
+    S.state = 'fb'; $('help').hidden = true;
     let gainXp = 0, shieldUsed = false;
+    const hf = HINT_FACTOR[Math.min(2, info.hints || 0)];
     if (ok) {
       S.streak++;
       const mult = NQ.prog.streakMult(S.streak);
-      S.score += Math.round(100 * mult * DIFF_BONUS[S.ed] * (room ? 2 : 1));
-      gainXp = NQ.prog.xpFor({ kind: room ? 'room' : 'gate', diff: item.diff, difficulty: S.ed, streak: S.streak });
+      S.score += Math.round(100 * mult * DIFF_BONUS[S.ed] * (room ? 2 : 1) * hf);
+      gainXp = Math.round(hf * NQ.prog.xpFor({ kind: room ? 'room' : 'gate', diff: item.diff, difficulty: S.ed, streak: S.streak }));
       p.xp += gainXp; S.xp += gainXp;
       if (!room) S.speed = Math.min(S.speed + S.D.inc, S.D.max);
       NQ.sfx.good(mult);
@@ -219,6 +244,7 @@
       }
     } else if (info.timeout) lines.push({ k: 'ko', t: '⏱ Temps écoulé !' });
     if (gainXp) extra.push('+' + gainXp + ' XP');
+    if (info.hints) extra.push('🔎 ' + info.hints + (info.hints > 1 ? ' indices utilisés' : ' indice utilisé') + ' : XP et score réduits.');
     if (shieldUsed) extra.push('🛡 Le bouclier a encaissé l\'erreur.');
     const lvl = NQ.prog.levelFor(prof().xp);
     if (lvl > S.lvl) { extra.push('⬆ Palier ' + lvl + ' atteint ! Récompense dans le Pass de combat.'); S.lvl = lvl; }
@@ -286,6 +312,7 @@
       if (e.key !== 'Enter' && S && !MiniGames.isOpen()) boostHeld = true;
       return;
     }
+    if (e.key === 'h' || e.key === 'H') { if (!e.repeat) hint(); return; }
     if (!S || MiniGames.isOpen()) return;
     if (['ArrowLeft', 'a', 'A', 'q', 'Q'].indexOf(e.key) >= 0) Runner.moveLane(-1);
     else if (['ArrowRight', 'd', 'D'].indexOf(e.key) >= 0) Runner.moveLane(1);
@@ -312,6 +339,7 @@
     const bb = $('bb');
     bb.addEventListener('pointerdown', (e) => { e.preventDefault(); if (UI.feedbackOpen()) UI.continueFeedback(); else boostHeld = true; });
     $('sol').addEventListener('click', () => { if (MiniGames.isOpen()) MiniGames.giveUp(); else revealGate(); });
+    $('hintb').addEventListener('click', hint);
     ['pointerup', 'pointercancel', 'pointerleave'].forEach((t) => bb.addEventListener(t, () => { boostHeld = false; }));
     bb.addEventListener('contextmenu', (e) => e.preventDefault());
     let tx = null;
@@ -335,7 +363,7 @@
     const dt = Math.min((now - lastT) / 1000, 0.05); lastT = now;
     // L'accélération ne s'applique que pendant l'approche d'une porte (pas en salle ni en feedback)
     setBoost(boostHeld); // s'engage dès qu'une porte approche si la touche est maintenue, se coupe sinon
-    if (S && S.state === 'gate') Runner.setSpeed(S.speed * (boost ? BOOST : 1));
+    if (S && S.state === 'gate') Runner.setSpeed(S.speed * (boost ? BOOST : 1) * (S.hintSlow || 1));
     else if (S && S.state === 'fb') Runner.setSpeed(S.speed);
     const events = Runner.update(paused ? 0 : dt);
     if (S && S.state === 'gate') events.forEach((ev) => { if (ev.type === 'gate' && S.state === 'gate') judgeGate(ev.lane); });

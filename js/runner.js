@@ -218,6 +218,11 @@ window.Runner = (function () {
     getLane() { return lane; },
     hasGate() { return !!gate; },
     shake(t) { shakeT = t || 0.6; },
-    setBoostFx(on) { boostFx = !!on; }
+    setBoostFx(on) { boostFx = !!on; },
+    // Indice : un panneau de mauvaise réponse devient presque transparent
+    dimPanel(i) {
+      const p = gate && gate.g.children[i]; if (!p) return;
+      p.material.transparent = true; p.material.opacity = 0.15; p.material.needsUpdate = true;
+    }
   };
 })();

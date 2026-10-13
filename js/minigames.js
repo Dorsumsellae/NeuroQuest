@@ -17,6 +17,7 @@ window.MiniGames = (function () {
     ctx.done = true;
     clearInterval(ctx.timer);
     if (ctx.gaveUp) { result.timeout = false; result.revealed = true; } // solution demandée par le joueur
+    result.hints = ctx.hints || 0;
     if (reveal) reveal();
     ctx.footer.innerHTML = '';
     setTimeout(() => { close(); ctx.resolve(result); }, 1100);
@@ -44,6 +45,12 @@ window.MiniGames = (function () {
       finish(ctx, { ok: i === it.line, chosen: i }, () => reveal(i));
     }
     ctx.onTimeout = () => finish(ctx, { ok: false, chosen: null, timeout: true }, () => reveal(null));
+    // Indice 2 : il ne reste que deux lignes candidates (la fautive et une autre)
+    ctx.onHint2 = () => {
+      const others = NQ.shuffle(it.code.map((_, i) => i).filter((i) => i !== it.line));
+      others.slice(1).forEach((i) => { rows[i].classList.add('dim'); rows[i].disabled = true; });
+      return 'Il ne reste que deux lignes possibles.';
+    };
     ctx.hint.textContent = 'Touche la ligne qui contient l\'erreur.';
     return body;
   }
@@ -109,6 +116,12 @@ window.MiniGames = (function () {
       });
     }
     ctx.onTimeout = () => validate(true);
+    // Indice 2 : le premier élément est remis à sa place, en tête de liste
+    ctx.onHint2 = () => {
+      order = [0].concat(order.filter((i) => i !== 0)); render();
+      if (list.firstChild) list.firstChild.classList.add('hinted');
+      return 'Le premier élément est placé : « ' + it.items[0] + ' ».';
+    };
     ctx.footer.appendChild(h('button', { class: 'btn primary', onclick: () => validate(false) }, 'Valider'));
     ctx.hint.textContent = 'Glisse les lignes par la poignée ⠿ (ou utilise ▲ ▼) pour les remettre dans le bon ordre.';
     render();
@@ -167,6 +180,14 @@ window.MiniGames = (function () {
       });
     }
     ctx.onTimeout = () => validate(true);
+    // Indice 2 : une paire correcte (pas encore trouvée) est reliée
+    ctx.onHint2 = () => {
+      let t = 0; while (t < n - 1 && link[t] != null && defOrder[link[t]] === t) t++;
+      const d = defOrder.indexOf(t);
+      Object.keys(link).forEach((k) => { if (link[k] === d) delete link[k]; });
+      link[t] = d; selTerm = null; paint();
+      return 'Une paire est reliée : « ' + it.pairs[t][0] + ' ».';
+    };
     ctx.footer.appendChild(h('button', { class: 'btn primary', onclick: () => validate(false) }, 'Valider'));
     ctx.hint.textContent = 'Touche un terme, puis sa définition. Retouche un terme pour défaire le lien.';
     return h('div', { class: 'as-grid' }, left, right);
@@ -183,8 +204,14 @@ window.MiniGames = (function () {
         timerSeconds ? h('div', { class: 'room-timer' }, h('div', { class: 'bar' }, timerBar), timerTxt) : null);
       const builder = { bug: buildBug, ordre: buildOrdre, assoc: buildAssoc }[item.type];
       const body = builder(ctx);
-      ctx.footer.appendChild(h('button', { class: 'btn ghost', onclick: giveUp }, '💡 Solution (Espace)'));
-      const card = h('div', { class: 'room-card' }, head, item.ctx ? h('p', { class: 'ctx' }, item.ctx) : null, h('p', { class: 'room-q' }, window.UILesson ? UILesson.glossify(item.q) : item.q), ctx.hint, body, ctx.footer);
+      ctx.hintText = (opts && opts.hintText) || '';
+      ctx.hintBox = h('p', { class: 'room-hint' });
+      if (!(opts && opts.noHelp)) {
+        ctx.hintBtn = h('button', { class: 'btn ghost', onclick: hint }, '🔎 Indice (H)');
+        ctx.footer.appendChild(ctx.hintBtn);
+        ctx.footer.appendChild(h('button', { class: 'btn ghost', onclick: giveUp }, '💡 Solution (Espace)'));
+      }
+      const card = h('div', { class: 'room-card' }, head, item.ctx ? h('p', { class: 'ctx' }, item.ctx) : null, h('p', { class: 'room-q' }, window.UILesson ? UILesson.glossify(item.q) : item.q), ctx.hint, ctx.hintBox, body, ctx.footer);
       root.innerHTML = ''; root.appendChild(card); root.classList.add('open'); root.scrollTop = 0;
       current = ctx;
       if (timerSeconds) {
@@ -199,6 +226,15 @@ window.MiniGames = (function () {
         tick(); ctx.timer = setInterval(tick, 100);
       }
     });
+  }
+  // Indice : 1er appui = rappel de la notion, 2e appui = aide propre à la salle. Réduit l'XP gagnée.
+  function hint() {
+    const c = current; if (!c || c.done || (c.hints || 0) >= 2) return 0;
+    c.hints = (c.hints || 0) + 1;
+    const txt = c.hints === 1 ? (c.hintText || 'Relis la question : quel est le rôle exact de chaque élément ?') : (c.onHint2 ? c.onHint2() : '');
+    c.hintBox.appendChild(h('span', null, (c.hints === 1 ? '🔎 ' : '🔎🔎 ') + txt));
+    if (c.hints >= 2 && c.hintBtn) c.hintBtn.disabled = true;
+    return c.hints;
   }
   // Le joueur demande la solution : la salle se termine comme un échec mais signalé « revealed »
   // (pas de vie perdue hors boss), avec la correction affichée.
@@ -226,5 +262,5 @@ window.MiniGames = (function () {
     return h('div');
   }
 
-  return { run, abort, giveUp, solutionNode, isOpen: () => !!current };
+  return { run, abort, giveUp, hint, solutionNode, isOpen: () => !!current };
 })();

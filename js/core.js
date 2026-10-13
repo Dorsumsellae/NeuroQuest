@@ -40,7 +40,7 @@
     name: 'Joueur', xp: 0, difficulty: 'normal',
     equipped: { skin: 'cobalt', trail: 'bleu', title: '' },
     elite: false, bosses: { 1: false, 2: false, 3: false, 4: false },
-    mastery: {}, codexRead: {},
+    mastery: {}, codexRead: {}, lessonsSeen: {}, campaign: {},
     stats: { games: 0, best: 0, answers: 0, correct: 0 },
     muted: false,     // effets sonores coupés
     music: true,      // musique d'ambiance

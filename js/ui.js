@@ -119,12 +119,21 @@ window.UI = (function () {
     const code = $('qcode');
     code.textContent = d && d.code ? d.code : '';
     code.style.display = d && d.code ? '' : 'none';
-    $('sol').hidden = !d;
+    $('help').hidden = !d || !!(d && d.noHelp);
+    $('hintb').disabled = false;
+    const qh = $('qhint'); qh.innerHTML = ''; qh.hidden = true;
     const opts = $('opts'); opts.innerHTML = '';
     if (d && d.chips) d.chips.forEach((c, i) => opts.appendChild(h('button', {
       class: 'chip', style: 'border-color:' + c.color, onclick: () => Runner.setLane(i)
     }, c.text)));
   }
+  // Indice sur une porte : texte sous la question, et pastille de réponse éliminée grisée
+  function showHint(text, level) {
+    const qh = $('qhint'); qh.hidden = false;
+    qh.appendChild(h('span', null, (level === 1 ? '🔎 ' : '🔎🔎 '), window.UILesson ? UILesson.glossify(text) : text));
+    if (level >= 2) $('hintb').disabled = true;
+  }
+  function dimChip(i) { const c = $('opts').children[i]; if (c) c.classList.add('out'); }
   function flash(ok) {
     const f = $('flash'); f.textContent = ok ? '✅' : '❌'; f.className = 'show ' + (ok ? 'ok' : 'ko');
     clearTimeout(flashTimer); flashTimer = setTimeout(() => { f.className = ''; }, 600);
@@ -210,7 +219,7 @@ window.UI = (function () {
     init, showMenu, hideMenu, showHud, updateHud, setQuestion, flash,
     showFeedback, hideFeedback, feedbackOpen, continueFeedback, showGameOver,
     openScreen, closeTop, closeAll, frame, showFrame, confirm: confirmDialog,
-    applyEquipped, titleOf, CH_LABEL, DIFF_LABEL, DIFF_ORDER,
+    applyEquipped, titleOf, CH_LABEL, DIFF_LABEL, DIFF_ORDER, showHint, dimChip,
     hasModal: () => stack.length > 0,
     cancelDialog() { const d = $('dlg'); if (d.classList.contains('open') && d._cancel) { d._cancel(); return true; } return false; },
     start(cfg) { return H.startGame(cfg); },

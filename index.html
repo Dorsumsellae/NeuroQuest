@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NeuroQuest – Révisions Deep Learning</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="stage"></div>
+
+<!-- HUD de jeu -->
+<div id="hud" hidden>
+  <div id="stats"><span id="sc"></span><span id="st"></span><span id="lv"></span><button id="quit" aria-label="Quitter la partie">☰</button></div>
+  <div id="who"></div>
+  <div id="ctx"></div>
+  <pre id="qcode"></pre>
+  <div id="q"></div>
+  <div id="opts"></div>
+</div>
+<div id="pads" hidden><button id="bl" aria-label="Couloir gauche">◀</button><button id="br" aria-label="Couloir droit">▶</button></div>
+<div id="flash"></div>
+<div id="fb"></div>
+
+<!-- Écrans -->
+<div id="menu" class="screen"></div>
+<div id="ui"></div>
+<div id="room"></div>
+<div id="dlg"></div>
+
+<script src="lib/three.min.js"></script>
+<script src="lib/marked.min.js"></script>
+<script src="content/notions.js"></script>
+<script src="content/ch1.js"></script>
+<script src="content/ch2.js"></script>
+<script src="content/ch3.js"></script>
+<script src="content/ch4.js"></script>
+<script src="content/codex.js"></script>
+<script src="js/core.js"></script>
+<script src="js/progression.js"></script>
+<script src="js/leaderboard.js"></script>
+<script src="js/runner.js"></script>
+<script src="js/minigames.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/ui_codex.js"></script>
+<script src="js/ui_views.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

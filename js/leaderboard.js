@@ -68,16 +68,20 @@ NQ.leaderboard = (function () {
   };
 
   // ---------- Façade ----------
+  // Le SDK Firestore réessaie indéfiniment quand la base est injoignable (hors ligne, base non créée) :
+  // on borne chaque appel pour retomber sur le classement local au lieu de rester sur « chargement… ».
+  const TIMEOUT = 8000;
+  const withTimeout = (p, what) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error(what + ' : pas de réponse de Firestore en ' + TIMEOUT / 1000 + ' s')), TIMEOUT))]);
   return {
     isShared: () => !!cfg,
     submit(entry) {
       const p = local.submit(entry);
       if (!cfg) return p;
-      return shared.submit(entry).catch((e) => { console.warn('Classement partagé indisponible :', e.message); });
+      return withTimeout(shared.submit(entry), 'envoi du score').catch((e) => { console.warn('Classement partagé indisponible :', e.message); });
     },
     top(n, difficulty) {
       if (!cfg) return local.top(n, difficulty);
-      return shared.top(n, difficulty).catch((e) => {
+      return withTimeout(shared.top(n, difficulty), 'lecture du classement').catch((e) => {
         console.warn('Classement partagé indisponible, affichage local :', e.message);
         return local.top(n, difficulty).then((rows) => { rows.localFallback = true; return rows; });
       });

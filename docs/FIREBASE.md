@@ -15,14 +15,20 @@ Ouvrir `js/firebase-config.js` et remplacer `null` par l'objet copié :
 
 ```js
 window.NQ_FIREBASE_CONFIG = {
-  apiKey: "AIzaSyCPRZNNiX_mRvfjqKh8TK1Gjrs8ZQnHVvk",
-  authDomain: "neuroquest-9e856.firebaseapp.com",
-  projectId: "neuroquest-9e856",
-  storageBucket: "neuroquest-9e856.firebasestorage.app",
-  messagingSenderId: "854082221542",
-  appId: "1:854082221542:web:b8395e60e977962a6cd227"
+  apiKey: "AIza…",
+  authDomain: "<projet>.firebaseapp.com",
+  projectId: "<projet>",
+  storageBucket: "<projet>.firebasestorage.app",
+  messagingSenderId: "…",
+  appId: "…"
 };
 ```
+
+(Le projet actuel du jeu est `neuroquest-9e856` ; sa configuration réelle est dans `js/firebase-config.js`.)
+
+### Si le classement reste « injoignable »
+
+Ouvrir la console du navigateur (F12). Le message « Cloud Firestore API has not been used in project … or it is disabled » signifie que la base n'a pas été créée : refaire l'étape 3 (Build → Firestore Database → Créer une base de données). Le message « Missing or insufficient permissions » signifie que les règles de l'étape 3 ne sont pas publiées. Le message « The query requires an index » renvoie à l'étape 4.
 
 Cette configuration peut être publiée sans risque : elle identifie le projet, elle ne donne aucun droit. Ce sont les règles ci-dessous qui protègent la base.
 

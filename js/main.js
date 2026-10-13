@@ -348,12 +348,15 @@
     if (t === 'INPUT' || t === 'TEXTAREA') return;
     if (UI.hasModal()) return;
     if (UILesson.isOpen() && e.key !== ' ' && !isBoostKey(e.key) && e.key !== 'Enter') return;
-    if (e.key === ' ') { // Espace : pause et solution (porte ou salle)
+    if (e.key === ' ') { // Espace : met l'explication en pause (↑ pour continuer)
       e.preventDefault();
-      if (UILesson.isOpen()) return;
-      if (e.repeat || !S) return;
-      if (UI.feedbackOpen()) UI.pauseFeedback(); // Espace pendant l'explication : on fige, ↑ pour continuer
-      else if (MiniGames.isOpen()) MiniGames.giveUp();
+      if (UILesson.isOpen() || e.repeat || !S) return;
+      if (UI.feedbackOpen()) UI.pauseFeedback();
+      return;
+    }
+    if (e.key === 's' || e.key === 'S') { // S : afficher la solution (porte ou salle)
+      if (UILesson.isOpen() || e.repeat || !S || UI.feedbackOpen()) return;
+      if (MiniGames.isOpen()) MiniGames.giveUp();
       else if (S.state === 'gate') revealGate();
       return;
     }

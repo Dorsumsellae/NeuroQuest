@@ -222,7 +222,7 @@ window.MiniGames = (function () {
       if (!(opts && opts.noHelp)) {
         ctx.hintBtn = h('button', { class: 'btn ghost', onclick: hint }, '🔎 Indice (H)');
         ctx.footer.appendChild(ctx.hintBtn);
-        ctx.footer.appendChild(h('button', { class: 'btn ghost', onclick: giveUp }, '💡 Solution (Espace)'));
+        ctx.footer.appendChild(h('button', { class: 'btn ghost', onclick: giveUp }, '💡 Solution (S)'));
       }
       const card = h('div', { class: 'room-card' }, head, item.ctx ? h('p', { class: 'ctx' }, item.ctx) : null, h('p', { class: 'room-q' }, window.UILesson ? UILesson.glossify(item.q) : item.q), ctx.hint, ctx.hintBox, body, ctx.footer);
       root.innerHTML = ''; root.appendChild(card); root.classList.add('open'); root.scrollTop = 0;

@@ -42,7 +42,17 @@
     MiniGames.abort(); Runner.clearGate(); UI.hideFeedback(); UI.closeAll(); S = null; boostHeld = false; setBoost(false);
     if (UILesson.isOpen()) UILesson.close();
   }
-  function effDifficulty(cfg) { return cfg.mode === 'boss' ? 'expert' : cfg.difficulty; }
+  function effDifficulty(cfg) { return cfg.mode === 'boss' ? 'expert' : cfg.mode === 'campaign' ? 'decouverte' : cfg.difficulty; }
+  const CAMPAIGN_LEN = 3, CAMPAIGN_XP = 30;
+
+  // Campagne : jusqu'à 3 épreuves sur la notion de l'étape, les plus faciles d'abord (portes avant salles)
+  function buildCampaignQueue(cfg) {
+    const all = NQ.pool({ notion: cfg.notionFilter });
+    const rank = (it) => (NQ.isRoom(it) ? 10 : 0) + it.diff;
+    return NQ.shuffle(all).sort((a, b) => rank(a) - rank(b)).slice(0, CAMPAIGN_LEN);
+  }
+  // Étape validée : au plus une erreur sur 3 épreuves (aucune s'il y en a moins de 3)
+  const campaignAllowed = (n) => (n >= 3 ? 1 : 0);
 
   function buildBossQueue(cfg) {
     const all = NQ.pool({ ch: cfg.chapter });
@@ -65,10 +75,11 @@
     const p = prof();
     const cfg = Object.assign({ chapter: 0, difficulty: p.difficulty, mode: 'normal', notionFilter: null }, c);
     if (cfg.mode === 'boss' && !cfg.chapter) cfg.chapter = 1;
+    if (cfg.mode === 'campaign') cfg.chapter = (NQ.notionsById[cfg.notionFilter] || {}).ch || 1;
     lastCfg = cfg;
     const ed = effDifficulty(cfg), D = DIFF[ed];
     const recent = p.codexRead[cfg.chapter] && Date.now() - p.codexRead[cfg.chapter] < SHIELD_WINDOW;
-    const lives = cfg.mode === 'flash' ? null : cfg.mode === 'boss' ? 1 : D.lives;
+    const lives = cfg.mode === 'flash' || cfg.mode === 'campaign' ? null : cfg.mode === 'boss' ? 1 : D.lives;
     let all = cfg.mode === 'flash' ? [] : NQ.pool({ ch: cfg.chapter });
     if (D.conceptOnly) all = all.filter(isConcept);
     S = {
@@ -76,7 +87,7 @@
       shield: cfg.mode === 'boss' && recent ? 1 : 0, speed: D.speed, n: 0, rooms: 0, sinceRoom: 0, owedRoom: false,
       recent: [], recap: [], xp: 0, answered: 0, end: null, cur: null, okLane: 0, answers: [],
       pool: all, roomPool: all.filter(NQ.isRoom), gatePool: all.filter((i) => !NQ.isRoom(i)),
-      queue: cfg.mode === 'boss' ? buildBossQueue(cfg) : null,
+      queue: cfg.mode === 'boss' ? buildBossQueue(cfg) : cfg.mode === 'campaign' ? buildCampaignQueue(cfg) : null,
       unlockedBefore: NQ.prog.unlockedRewards(p).map((r) => r.id), lvl: NQ.prog.levelFor(p.xp)
     };
     if (cfg.mode === 'flash') {
@@ -86,17 +97,25 @@
     if (!S.pool.length && !S.gatePool.length && !(S.queue && S.queue.length)) { S = null; return; }
     UI.hideMenu(); UI.showHud(true);
     Runner.setLane(1); Runner.setSpeed(S.speed);
-    refreshHud(); next();
+    refreshHud();
+    if (cfg.mode === 'campaign' && UILesson.hasLesson(cfg.notionFilter)) {
+      // Une étape de campagne commence toujours par la leçon de sa notion
+      const id = S.id; S.state = 'lesson'; Runner.setSpeed(0);
+      UILesson.show(cfg.notionFilter).then(() => { if (S && S.id === id) { Runner.setSpeed(S.speed); next(); } });
+      return;
+    }
+    next();
   }
   function startFlash(notionId) { startGame({ chapter: 0, mode: 'flash', notionFilter: notionId, difficulty: prof().difficulty }); }
 
   // ---------- HUD ----------
   function refreshHud() {
     const c = S.cfg;
-    const tag = c.mode === 'boss' ? '👹 Boss ' + c.chapter
+    const tag = c.mode === 'campaign' ? '🗺 ' + ((NQ.notionsById[c.notionFilter] || {}).label || 'Campagne').slice(0, 30)
+      : c.mode === 'boss' ? '👹 Boss ' + c.chapter
       : c.mode === 'flash' ? '🎯 ' + ((NQ.notionsById[c.notionFilter] || {}).label || 'Entraînement').slice(0, 28)
         : UI.CH_LABEL[c.chapter] + ' · ' + (UI.DIFF_LABEL[c.difficulty] || c.difficulty);
-    const total = c.mode === 'boss' ? BOSS_LEN : c.mode === 'flash' ? FLASH_LEN : (S.D.len || 0);
+    const total = c.mode === 'boss' ? BOSS_LEN : c.mode === 'flash' ? FLASH_LEN : c.mode === 'campaign' ? S.queue.length : (S.D.len || 0);
     UI.updateHud({
       score: S.score, mult: NQ.prog.streakMult(S.streak), lives: S.lives, maxLives: S.maxLives, shield: S.shield,
       title: UI.titleOf(), tag, rooms: c.mode === 'normal' ? S.rooms : 0, progress: total ? Math.min(S.answered + 1, total) + '/' + total : ''
@@ -190,6 +209,10 @@
     if (S.lives != null && S.lives <= 0) return { win: false };
     if (c.mode === 'boss' && S.answered >= BOSS_LEN) return { win: true };
     if (c.mode === 'flash' && S.answered >= FLASH_LEN) return { win: true };
+    if (c.mode === 'campaign' && S.answered >= S.queue.length) {
+      const errors = S.recap.filter((r) => !r.ok).length;
+      return { win: errors <= campaignAllowed(S.queue.length) };
+    }
     if (c.mode === 'normal' && S.D.len && S.answered >= S.D.len) return { win: true };
     return null;
   }
@@ -265,8 +288,22 @@
     if (c.mode === 'boss' && win) {
       p.bosses[c.chapter] = true; p.elite = true; p.xp += 200; S.xp += 200;
     }
+    let campaign = null;
+    if (c.mode === 'campaign') {
+      const firstTime = !NQ.campaign.done(c.notionFilter);
+      if (win) { p.campaign = p.campaign || {}; p.campaign[c.notionFilter] = Date.now(); if (firstTime) { p.xp += CAMPAIGN_XP; S.xp += CAMPAIGN_XP; } }
+      const nextId = win ? NQ.campaign.nextAfter(c.notionFilter) : null;
+      const good = S.recap.filter((r) => r.ok).length, prog = NQ.campaign.progress(c.chapter);
+      campaign = {
+        sub: good + '/' + S.recap.length + ' bonnes réponses. ' + (win
+          ? 'Étape validée' + (firstTime ? ' (+' + CAMPAIGN_XP + ' XP)' : '') + '. Chapitre ' + c.chapter + ' : ' + prog.done + '/' + prog.total + ' étapes.'
+          : 'Il faut au plus ' + campaignAllowed(S.recap.length) + ' erreur' + (campaignAllowed(S.recap.length) > 1 ? 's' : '') + ' pour valider : relis la leçon et réessaie.'),
+        nextLabel: win ? (nextId ? 'Étape suivante ▶' : (prog.done === prog.total ? '👹 Affronter le boss ▶' : null)) : '🔁 Réessayer l\'étape',
+        onNext: win ? (nextId ? () => startGame({ mode: 'campaign', notionFilter: nextId }) : (prog.done === prog.total ? () => startGame({ mode: 'boss', chapter: c.chapter, difficulty: 'expert' }) : null)) : () => startGame(lastCfg)
+      };
+    }
     p.stats.games++;
-    if (c.mode !== 'flash') {
+    if (c.mode !== 'flash' && c.mode !== 'campaign') {
       p.stats.best = Math.max(p.stats.best, S.score);
       NQ.leaderboard.submit({ name: p.name, score: S.score, difficulty: S.ed, chapter: c.chapter, date: new Date().toISOString().slice(0, 10) });
     }
@@ -276,11 +313,14 @@
     const lvlNow = NQ.prog.levelFor(p.xp), startLvl = NQ.prog.levelFor(p.xp - S.xp);
     Runner.clearGate(); Runner.setSpeed(IDLE_SPEED); UI.setQuestion(null);
     const res = {
-      headline: c.mode === 'boss' ? (win ? '👹 Boss vaincu !' : '💀 Le boss résiste') : c.mode === 'flash' ? '🎯 Entraînement terminé'
+      headline: c.mode === 'campaign' ? (win ? '✅ Étape validée' : '🔁 Étape à refaire')
+        : c.mode === 'boss' ? (win ? '👹 Boss vaincu !' : '💀 Le boss résiste') : c.mode === 'flash' ? '🎯 Entraînement terminé'
         : S.D.conceptOnly ? '🌱 Session Découverte terminée' : 'Partie terminée',
-      sub: c.mode === 'boss' ? (win ? 'Skin « ' + NQ.prog.BOSS_SKINS[c.chapter].name + ' » et piste Élite débloqués (+200 XP).' : 'Relis les explications ci-dessous et retente.') : '',
-      score: S.score, xp: S.xp, noScore: c.mode === 'flash', levelUp: lvlNow > startLvl ? lvlNow : 0,
-      unlocks, recap: S.recap, full: c.mode === 'boss'
+      sub: campaign ? campaign.sub : c.mode === 'boss' ? (win ? 'Skin « ' + NQ.prog.BOSS_SKINS[c.chapter].name + ' » et piste Élite débloqués (+200 XP).' : 'Relis les explications ci-dessous et retente.') : '',
+      score: S.score, xp: S.xp, noScore: c.mode === 'flash' || c.mode === 'campaign', levelUp: lvlNow > startLvl ? lvlNow : 0,
+      unlocks, recap: S.recap, full: c.mode === 'boss',
+      nextLabel: campaign && campaign.nextLabel, onNext: campaign && campaign.onNext,
+      campaignMap: c.mode === 'campaign'
     };
     UI.showGameOver(res);
   }

@@ -160,6 +160,20 @@
     store.save();
   };
 
+  // ---------- Campagne : une étape par notion, dans l'ordre du registre (= ordre du cours) ----------
+  NQ.campaign = {
+    steps(ch) { return (NQ.notions || []).filter((n) => n.ch === ch).map((n) => n.id); },
+    done(id) { return !!(store.profile.campaign || {})[id]; },
+    // Étape à jouer dans un chapitre : la première non validée (null si le chapitre est terminé)
+    current(ch) { return this.steps(ch).find((id) => !this.done(id)) || null; },
+    nextAfter(id) {
+      const n = NQ.notionsById[id]; if (!n) return null;
+      const st = this.steps(n.ch), i = st.indexOf(id);
+      return st.slice(i + 1).find((x) => !this.done(x)) || null;
+    },
+    progress(ch) { const st = this.steps(ch); return { done: st.filter((id) => this.done(id)).length, total: st.length }; }
+  };
+
   // ---------- Sons : délégués à js/audio.js (NQ.audio), chargé après ce fichier ----------
   NQ.beep = function (f, d, type) { if (NQ.audio) NQ.audio.note(f, d || 0.12, type); };
   NQ.sfx = {

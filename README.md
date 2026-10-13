@@ -13,6 +13,7 @@ Le contenu couvre les quatre chapitres du cours : régressions et descente de gr
 - **PC** : double-cliquer sur `index.html` (Chrome ou Edge). Aucune installation, aucun serveur, fonctionne hors ligne.
 - **Téléphone** : copier le dossier complet sur le téléphone et ouvrir `index.html`, ou déposer le dossier sur n'importe quel hébergement statique (GitHub Pages, Netlify…) et ouvrir le lien.
 - **Commandes** : ← → (ou A / D, Q / D) pour changer de couloir ; **Espace** met en pause et affiche la solution (porte ou salle) ; **↑** (ou W / Z, ou Entrée) passe à la suite après un feedback, et maintenue pendant l'approche d'une porte elle accélère ; Échap ferme une fenêtre. Sur mobile : balayer vers la gauche ou la droite ou utiliser ◀ ▶, le bouton 💡 Solution sous la question, et ⏩ pour passer (appui) ou accélérer (maintien).
+- **Indices** (touche H ou bouton 🔎) : le premier rappelle la phrase clé de la notion et ralentit la porte ; le second élimine une mauvaise réponse (porte), ne laisse que deux lignes possibles (chasse au bug), place le premier élément (ordre) ou relie une paire (association). L'XP et le score de la réponse sont réduits (60 % puis 30 %). Pas d'indice pendant un boss.
 - **Demander la solution** rompt la série et fait baisser la maîtrise de la notion, mais ne coûte pas de vie, sauf pendant un boss où cela compte comme une erreur.
 
 La sauvegarde est dans le navigateur (localStorage). Pour changer d'appareil : Options → Exporter, puis Options → Importer sur l'autre appareil.
@@ -23,6 +24,7 @@ La sauvegarde est dans le navigateur (localStorage). Pour changer d'appareil : O
 
 | Mode | Déroulement |
 |---|---|
+| **Campagne guidée** (recommandé pour débuter) | Une étape par notion, dans l'ordre du cours : la leçon de la notion, puis jusqu'à 3 questions faciles dessus. Au plus une erreur sur 3 pour valider ; pas de vies, indices et solution autorisés. Chaque étape validée ouvre la suivante (+30 XP la première fois). Quand un chapitre est terminé, la campagne propose son boss. Les étapes validées restent rejouables. |
 | **Partie** (chapitre 1 à 4 ou Mix) | Enchaînement de portes (questions à 3 choix, calculs) et, toutes les 4 épreuves environ, une salle de mini-jeu. On perd une vie par erreur ; la partie s'arrête à 0 vie. |
 | **Découverte** (niveau 0) | 15 questions de compréhension des notions, sans code ni calcul, sans vies ni salle, à vitesse lente. Idéal pour un premier passage ou pour vérifier qu'on a compris avant de passer aux niveaux suivants. |
 | **Boss** (un par chapitre) | 10 épreuves mixtes à vitesse Expert, une seule vie, pas d'explication entre les épreuves (bilan complet à la fin). Victoire : skin unique du chapitre, piste Élite du pass, +200 XP. Lire la fiche du chapitre dans le Codex moins de 30 minutes avant donne un **bouclier** : une erreur pardonnée. |

@@ -88,6 +88,8 @@ window.UI = (function () {
         h('div', { class: 'xpbar' }, h('i', { style: 'width:' + pr.pct + '%' })),
         h('small', null, 'Palier ' + pr.level + '/' + NQ.prog.TIERS + (pr.max ? ' (max)' : ' · ' + pr.into + '/' + pr.need + ' XP') +
           ' · Collection : ' + seen + '/' + NQ.notions.length + ' notions · Record ' + p.stats.best)),
+      h('button', { class: 'btn campaign-btn', onclick: () => UIViews.campaign() },
+        h('b', null, '🗺 Campagne guidée'), h('small', null, 'Débutant : une notion à la fois, dans l\'ordre du cours, leçon puis questions')),
       h('h3', null, 'Jouer'), h('div', { class: 'chap-grid' }, chapBtns),
       h('h3', null, 'Difficulté'), h('div', { class: 'seg-row' }, diffBtns), desc,
       h('div', { class: 'menu-grid' },
@@ -97,7 +99,7 @@ window.UI = (function () {
         h('button', { class: 'btn', onclick: () => UIViews.pass() }, '🎖 Pass de combat'),
         h('button', { class: 'btn', onclick: () => UIViews.leaderboard() }, '🏆 Classement'),
         h('button', { class: 'btn', onclick: () => UIViews.options() }, '⚙ Options')),
-      h('p', { class: 'keys' }, '← → ou A/D (Q) : changer de couloir · Espace : pause et solution · ↑ ou W/Z : passer (maintenu : accélérer) · Échap : fermer')));
+      h('p', { class: 'keys' }, '← → ou A/D (Q) : changer de couloir · H : indice · Espace : solution · ↑ ou W/Z : passer (maintenu : accélérer) · Échap : fermer')));
     menu.classList.add('open'); $('hud').hidden = true; $('pads').hidden = true;
   }
   function hideMenu() { $('menu').classList.remove('open'); }
@@ -208,7 +210,9 @@ window.UI = (function () {
         r.levelUp ? h('p', { class: 'lvl' }, '⬆ Palier ' + r.levelUp + ' atteint !') : null,
         unlocks, h('h3', null, 'Récapitulatif'), h('div', { class: 'recap' }, recap),
         h('div', { class: 'row' },
-          h('button', { class: 'btn primary', onclick: () => { closeAll(); H.replay(); } }, '↻ Rejouer'),
+          r.nextLabel && r.onNext ? h('button', { class: 'btn primary', id: 'over-next', onclick: () => { closeAll(); r.onNext(); } }, r.nextLabel) : null,
+          r.campaignMap ? h('button', { class: 'btn', onclick: () => { closeAll(); H.menu(); UIViews.campaign(); } }, '🗺 Carte de campagne')
+            : h('button', { class: 'btn primary', onclick: () => { closeAll(); H.replay(); } }, '↻ Rejouer'),
           h('button', { class: 'btn', onclick: () => { closeAll(); H.menu(); } }, 'Menu'))));
     openScreen(node, { closable: false });
   }

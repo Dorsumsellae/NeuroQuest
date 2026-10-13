@@ -220,6 +220,36 @@ window.UIViews = (function () {
       h('h3', null, 'Zone dangereuse'), h('button', { class: 'btn danger', onclick: doReset }, 'Réinitialiser la progression')));
   }
 
+  // ---------- Campagne guidée ----------
+  // Une étape par notion, dans l'ordre du cours. Chaque chapitre progresse indépendamment ;
+  // une étape s'ouvre quand la précédente est validée. Les étapes validées restent rejouables.
+  function campaign() {
+    const body = h('div', { class: 'camp' }, h('p', { class: 'hint' },
+      'Chaque étape = la leçon d\'une notion, puis jusqu'à 3 questions faciles dessus (au plus 1 erreur sur 3 pour valider, aucune s'il y en a moins). Pas de vies, indices et solution autorisés. Quand un chapitre est terminé, son boss vous attend.'));
+    const start = (id) => { closeModals(); UI.handlers().startGame({ mode: 'campaign', notionFilter: id }); };
+    [1, 2, 3, 4].forEach((c) => {
+      const steps = NQ.campaign.steps(c), cur = NQ.campaign.current(c), pr = NQ.campaign.progress(c);
+      const pct = Math.round(100 * pr.done / pr.total);
+      const list = h('ol', { class: 'camp-steps' });
+      steps.forEach((id) => {
+        const n = NQ.notionsById[id], done = NQ.campaign.done(id), isCur = id === cur;
+        const open = done || isCur;
+        list.appendChild(h('li', { class: 'camp-step' + (done ? ' done' : '') + (isCur ? ' cur' : '') + (open ? '' : ' lock') },
+          h('button', { class: 'btn small' + (isCur ? ' primary' : ''), disabled: !open, onclick: () => start(id) },
+            done ? '✓' : isCur ? '▶' : '🔒'),
+          h('span', null, n.label)));
+      });
+      const head = h('div', { class: 'camp-head' },
+        h('div', null, h('b', null, 'Chapitre ' + c + ' · ' + UI.CH_LABEL[c]), h('small', null, ' ' + pr.done + '/' + pr.total + ' étapes')),
+        h('div', { class: 'xpbar' }, h('i', { style: 'width:' + pct + '%' })),
+        cur ? h('button', { class: 'btn primary', onclick: () => start(cur) }, pr.done ? 'Continuer ▶' : 'Commencer ▶')
+          : h('button', { class: 'btn boss', onclick: () => { closeModals(); UI.handlers().startGame({ mode: 'boss', chapter: c, difficulty: 'expert' }); } }, '👹 Boss du chapitre'));
+      const det = h('details', { class: 'camp-ch', open: (cur && pr.done > 0) || (c === 1 && !pr.done) ? true : null }, h('summary', null, head), list);
+      body.appendChild(det);
+    });
+    UI.showFrame('🗺 Campagne guidée', body);
+  }
+
   // ---------- Choix du boss ----------
   function bossSelect() {
     const p = NQ.store.profile, now = Date.now();
@@ -237,5 +267,5 @@ window.UIViews = (function () {
     UI.showFrame('👹 Boss de chapitre', body);
   }
 
-  return { mastery, pass, leaderboard, options, bossSelect };
+  return { mastery, pass, leaderboard, options, bossSelect, campaign };
 })();

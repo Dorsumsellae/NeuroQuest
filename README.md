@@ -49,7 +49,7 @@ La vitesse augmente à chaque bonne réponse jusqu'au plafond du niveau.
 
 ### Apprendre avant d'être interrogé
 
-- **Micro-leçon** : la première fois qu'une notion apparaît (hors boss), le jeu s'arrête sur une carte : un titre parlant, un schéma, 3 à 5 phrases simples, un exemple chiffré et une phrase à retenir. ↑ ou « C'est parti » lance la question. Les 68 notions ont leur leçon ; on peut les relire depuis la carte de maîtrise (📘) ou le Codex (📘 Leçon).
+- **Micro-leçon** : la première fois qu'une notion apparaît (hors boss), le jeu s'arrête sur une carte : un titre parlant, un schéma, 3 à 7 phrases simples, un exemple chiffré et une phrase à retenir. ↑ ou « C'est parti » lance la question. Les 71 notions ont leur leçon. Ensemble, elles couvrent tout ce qui est examinable dans les PDF 0 à 4 (hors historique) : on peut réviser sans ouvrir le cours. On peut les relire depuis la carte de maîtrise (📘) ou le Codex (📘 Leçon).
 - **Glossaire au toucher** : les termes techniques (83 termes) sont soulignés en pointillés dorés dans les questions, les salles, les explications et les leçons ; un toucher affiche leur définition en une phrase.
 
 ### Après chaque réponse
@@ -67,7 +67,7 @@ Le feedback commence par **💬 En clair** : une ou deux phrases en mots de tous
 
 - **XP** : 10 × difficulté de l'épreuve (1 à 3) par porte réussie, 25 × difficulté par salle réussie, ×1,5 en Expert, multiplicateur de série (×2 à partir de 3 bonnes réponses d'affilée, ×3 à partir de 6).
 - **Pass de combat « Saison 1 : Fondamentaux »** : 20 paliers de coût croissant. Deux pistes : Gratuite et Élite (débloquée en battant n'importe quel boss). Récompenses : skins (forme et couleur du vaisseau), sillages (couleur de la traînée), titres affichés dans le HUD et le classement. L'aperçu 3D du pass montre la récompense sélectionnée, même verrouillée. Aucun achat, même fictif.
-- **Carte de maîtrise** : chaque notion a une jauge de 0 à 100 (+15 par bonne réponse, −20 par erreur, pondérés par la difficulté). Le jeu tire plus souvent les notions faibles ou pas vues depuis longtemps (répétition espacée). États : Découverte, En cours, Maîtrisée. Le menu affiche la collection (notions rencontrées / 68).
+- **Carte de maîtrise** : chaque notion a une jauge de 0 à 100 (+15 par bonne réponse, −20 par erreur, pondérés par la difficulté). Le jeu tire plus souvent les notions faibles ou pas vues depuis longtemps (répétition espacée). États : Découverte, En cours, Maîtrisée. Le menu affiche la collection (notions rencontrées / 71).
 - **Classement** : local pour l'instant, par difficulté, 50 meilleurs scores. Score = 100 × multiplicateur de série × bonus de difficulté (0,5 / 1 / 1,25 / 1,5), doublé pour une salle.
 
 ## 4. Le Codex
@@ -81,11 +81,11 @@ index.html                 page du jeu (scripts classiques, compatible file://)
 css/style.css
 lib/three.min.js           three.js r128, copie locale (hors ligne)
 lib/marked.min.js          marked 4.3, rendu Markdown du Codex
-content/notions.js         registre des 68 notions : id, chapitre, libellé, fiche + section du Codex
+content/notions.js         registre des 71 notions : id, chapitre, libellé, fiche + section du Codex
 content/ch1.js … ch4.js    192 épreuves (134 choix, 24 calculs, 16 bugs, 9 ordres, 9 associations), JSON strict
 content/codex.js           fiches de révision, GÉNÉRÉ par tools/build_codex.py (ne pas éditer à la main)
 content/glossary.js        glossaire de base (les fichiers de leçons y ajoutent leurs termes)
-content/lessons*.js        68 micro-leçons (une par notion) + termes de glossaire par chapitre
+content/lessons*.js        71 micro-leçons (une par notion) + termes de glossaire par chapitre
 js/schemas.js              23 schémas SVG des leçons
 js/ui_lesson.js            affichage des leçons et bulles du glossaire
 js/core.js                 état, sauvegarde, tirage pondéré des épreuves, maîtrise
@@ -150,7 +150,7 @@ Puis valider :
 python tools/check_content.py
 ```
 
-Les audits de contenu (contre les PDF du cours) sont dans `docs/audit/`. `node tools/apply_audit.js --prefix=<rapport>` affiche les correctifs proposés par un rapport, `--apply` les applique.
+Les audits de contenu (contre les PDF du cours) sont dans `docs/audit/`. `node tools/apply_audit.js --prefix=<rapport>` affiche les correctifs proposés par un rapport, `--apply` les applique. `tools/apply_lessons.js` et `tools/apply_notions.js` font de même pour les micro-leçons et les nouvelles notions (rapports `prereq_*` : chaque question est expliquée par la leçon qui la précède ; `cover_*` : les leçons couvrent tout le cours).
 
 Le validateur vérifie le schéma, l'unicité des ids, l'existence des notions référencées, la couverture de toutes les notions par au moins une épreuve, l'absence de la bonne réponse parmi les mauvaises, et la validité de l'index de ligne des bugs.
 

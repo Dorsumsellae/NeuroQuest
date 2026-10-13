@@ -38,7 +38,7 @@ const parse = (line) => { const comma = line.endsWith(','); return { obj: JSON.p
 
 let ok = 0, bad = 0;
 for (const p of patches) {
-  if (p.action === 'lesson') continue; // traité par tools/apply_lessons.js
+  if (p.action === 'lesson' || p.action === 'notion') continue; // traités par apply_lessons.js / apply_notions.js
   if (skip.has(p.id)) { console.log('IGNORÉ  ' + p.id); continue; }
   const loc = find(p.id);
   if (!loc) { console.log('INTROUVABLE ' + p.id + ' (' + p.from + ')'); bad++; continue; }

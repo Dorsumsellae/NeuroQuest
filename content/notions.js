@@ -19,6 +19,7 @@ window.NQ.notions = [
 {"id":"reg.pandas","ch":1,"label":"Pandas : read_csv, isna, dropna, sample","fiche":"01","section":"Prise en main"},
 {"id":"reg.sweetviz","ch":1,"label":"Sweetviz et corrélation de Pearson","fiche":"01","section":"Prise en main"},
 {"id":"reg.one_neuron","ch":1,"label":"Régression à un neurone (PyTorch)","fiche":"01","section":"Le pont vers le deep learning"},
+{"id":"reg.ia_enjeux","ch":1,"label":"Deep learning, IA faible / généralisée, apports et tractabilité de l'IA","fiche":"01","section":"pont vers le deep learning"},
 
 {"id":"nn.types_ml","ch":2,"label":"Supervisé, non supervisé, renforcement, data science, IA générative","fiche":"02","section":"Définitions de base"},
 {"id":"nn.train_infer","ch":2,"label":"Apprentissage vs inférence (format des données)","fiche":"02","section":"Définitions de base"},
@@ -26,6 +27,7 @@ window.NQ.notions = [
 {"id":"nn.poids_signe","ch":2,"label":"Poids négatif = inhibition, positif = excitation","fiche":"02","section":"Le neurone artificiel"},
 {"id":"nn.lien_regression","ch":2,"label":"Neurone linéaire = régression linéaire","fiche":"02","section":"Du neurone à la régression"},
 {"id":"nn.backprop","ch":2,"label":"Backpropagation de l'erreur","fiche":"02","section":"backpropagation"},
+{"id":"nn.fashion_data","ch":2,"label":"Charger et explorer Fashion-MNIST (load_data, shape, imshow, class_names)","fiche":"02","section":"MLP dense avec Keras"},
 {"id":"nn.keras_pipeline","ch":2,"label":"Pipeline Keras : Sequential, Input, Flatten, Dense","fiche":"02","section":"MLP dense avec Keras"},
 {"id":"nn.params","ch":2,"label":"Comptage des paramètres d'une couche Dense","fiche":"02","section":"MLP dense avec Keras"},
 {"id":"nn.normalisation","ch":2,"label":"Normalisation des entrées (/255)","fiche":"02","section":"MLP dense avec Keras"},
@@ -47,6 +49,7 @@ window.NQ.notions = [
 {"id":"cnn.resnet","ch":2,"label":"ResNet et blocs résiduels","fiche":"02","section":"Modèles avancés"},
 {"id":"cnn.inception","ch":2,"label":"Inception","fiche":"02","section":"Modèles avancés"},
 {"id":"cnn.bilan","ch":2,"label":"Modèle profond vs MLP (bilan)","fiche":"02","section":"Bilan du cours"},
+{"id":"cnn.modeles_keras","ch":2,"label":"Comparer les modèles pré-entraînés de Keras (taille, Top-1/Top-5, paramètres)","fiche":"02","section":"Modèles avancés"},
 
 {"id":"ae.cnn_limite","ch":3,"label":"Pourquoi un CNN de classification n'analyse pas une image","fiche":"03","section":"Retour sur le CNN"},
 {"id":"ae.principe","ch":3,"label":"Autoencodeur : encodeur, code (espace latent), décodeur","fiche":"03","section":"Autoencodeur : principe"},

@@ -1050,3 +1050,8 @@ body.boost #st::after { content: ' ⏩'; color: var(--gold); }
 }
 body.boost #stage::after { opacity: 1; animation: speedlines .25s linear infinite; }
 @keyframes speedlines { from { transform: scale(1); } to { transform: scale(1.06); } }
+
+/* ---- Bouton Solution dans le HUD ---- */
+#sol { display: block; margin: 6px auto 0; pointer-events: auto; min-width: 0; font-size: 13px; padding: 6px 14px; border-radius: 10px; background: #0b1030aa; border: 2px solid var(--line); color: var(--mut); }
+#sol:hover { color: #fff; border-color: var(--gold); }
+#sol[hidden] { display: none; }

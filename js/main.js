@@ -140,7 +140,7 @@
     const timer = S.cfg.mode === 'flash' ? 0 : S.D.roomTimer;
     MiniGames.run(item, { timerSeconds: timer }).then((res) => {
       if (!S || S.id !== id || res.aborted) return;
-      resolveItem(item, res.ok, { kind: 'room', timeout: res.timeout });
+      resolveItem(item, res.ok, { kind: 'room', timeout: res.timeout, revealed: !!res.revealed });
     });
   }
 
@@ -161,7 +161,7 @@
 
   function resolveItem(item, ok, info) {
     const p = prof(), room = info.kind === 'room', id = S.id;
-    S.state = 'fb';
+    S.state = 'fb'; $('sol').hidden = true;
     let gainXp = 0, shieldUsed = false;
     if (ok) {
       S.streak++;
@@ -171,6 +171,9 @@
       p.xp += gainXp; S.xp += gainXp;
       if (!room) S.speed = Math.min(S.speed + S.D.inc, S.D.max);
       NQ.sfx.good(mult);
+    } else if (info.revealed && S.cfg.mode !== 'boss') {
+      // Solution demandée : pas de vie perdue, mais la série est rompue et la maîtrise baisse
+      S.streak = 0; NQ.audio.sfx.unlock();
     } else {
       S.streak = 0;
       if (S.cfg.mode !== 'flash') {
@@ -193,7 +196,11 @@
 
   function buildFeedback(item, ok, info, gainXp, shieldUsed) {
     const lines = [], extra = [];
-    if (info.kind === 'gate') {
+    if (info.revealed) {
+      if (info.kind === 'gate') lines.push({ k: 'ok', t: '✅ Bonne réponse : « ' + item.ok + ' »' });
+      if (S.cfg.mode === 'boss') lines.push({ k: 'ko', t: 'Pendant un boss, demander la solution compte comme une erreur.' });
+      else lines.push({ k: '', t: 'Pas de vie perdue, mais la série repart de zéro et la maîtrise de la notion baisse.' });
+    } else if (info.kind === 'gate') {
       if (ok) lines.push({ k: 'ok', t: '✅ Bonne réponse : « ' + item.ok + ' »' });
       else {
         lines.push({ k: 'ko', t: '❌ Tu as pris : « ' + info.chosen + ' »' });
@@ -205,7 +212,7 @@
     const lvl = NQ.prog.levelFor(prof().xp);
     if (lvl > S.lvl) { extra.push('⬆ Palier ' + lvl + ' atteint ! Récompense dans le Pass de combat.'); S.lvl = lvl; }
     return {
-      ok, headline: ok ? '✅ Juste !' : '❌ Raté', lines, item, extra, why: item.why, whyNot: item.whyNot,
+      ok, headline: info.revealed ? '💡 Solution' : ok ? '✅ Juste !' : '❌ Raté', lines, item, extra, why: item.why, whyNot: item.whyNot,
       solution: info.kind === 'room' ? MiniGames.solutionNode(item) : null
     };
   }
@@ -250,15 +257,30 @@
     const t = e.target && e.target.tagName;
     if (e.key === 'Escape') { if (!UI.cancelDialog()) UI.closeTop(); return; }
     if (t === 'INPUT' || t === 'TEXTAREA') return;
-    if (UI.hasModal() || MiniGames.isOpen()) return;
-    if (e.key === ' ' || e.key === 'Enter') {
-      if (UI.feedbackOpen()) { e.preventDefault(); UI.continueFeedback(); }
+    if (UI.hasModal()) return;
+    if (e.key === ' ') { // Espace : pause et solution (porte ou salle)
+      e.preventDefault();
+      if (e.repeat || !S) return;
+      if (MiniGames.isOpen()) MiniGames.giveUp();
+      else if (S.state === 'gate') revealGate();
       return;
     }
-    if (!S) return;
+    if (isBoostKey(e.key) || e.key === 'Enter') { // ↑ : passer (feedback) ; maintenu pendant une porte : accélérer
+      if (e.key !== 'Enter') e.preventDefault();
+      if (e.repeat) return; // une touche gardée enfoncée ne doit pas sauter le feedback suivant
+      if (UI.feedbackOpen()) { UI.continueFeedback(); return; }
+      if (e.key !== 'Enter' && S && !MiniGames.isOpen()) boostHeld = true;
+      return;
+    }
+    if (!S || MiniGames.isOpen()) return;
     if (['ArrowLeft', 'a', 'A', 'q', 'Q'].indexOf(e.key) >= 0) Runner.moveLane(-1);
     else if (['ArrowRight', 'd', 'D'].indexOf(e.key) >= 0) Runner.moveLane(1);
-    else if (isBoostKey(e.key)) { e.preventDefault(); boostHeld = true; }
+  }
+  // Espace pendant une porte : la porte disparaît, la solution s'affiche (voir resolveItem)
+  function revealGate() {
+    if (!S || S.state !== 'gate') return;
+    Runner.clearGate();
+    resolveItem(S.cur, false, { kind: 'gate', revealed: true });
   }
   const isBoostKey = (k) => ['ArrowUp', 'w', 'W', 'z', 'Z'].indexOf(k) >= 0;
   function bindInputs() {
@@ -274,7 +296,8 @@
     $('br').addEventListener('pointerdown', (e) => { e.preventDefault(); move(1); });
     // Bouton ⏩ : accélère tant qu'il est maintenu
     const bb = $('bb');
-    bb.addEventListener('pointerdown', (e) => { e.preventDefault(); boostHeld = true; });
+    bb.addEventListener('pointerdown', (e) => { e.preventDefault(); if (UI.feedbackOpen()) UI.continueFeedback(); else boostHeld = true; });
+    $('sol').addEventListener('click', () => { if (MiniGames.isOpen()) MiniGames.giveUp(); else revealGate(); });
     ['pointerup', 'pointercancel', 'pointerleave'].forEach((t) => bb.addEventListener(t, () => { boostHeld = false; }));
     bb.addEventListener('contextmenu', (e) => e.preventDefault());
     let tx = null;

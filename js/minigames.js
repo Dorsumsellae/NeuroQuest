@@ -16,6 +16,7 @@ window.MiniGames = (function () {
     if (ctx.done) return;
     ctx.done = true;
     clearInterval(ctx.timer);
+    if (ctx.gaveUp) { result.timeout = false; result.revealed = true; } // solution demandée par le joueur
     if (reveal) reveal();
     ctx.footer.innerHTML = '';
     setTimeout(() => { close(); ctx.resolve(result); }, 1100);
@@ -182,6 +183,7 @@ window.MiniGames = (function () {
         timerSeconds ? h('div', { class: 'room-timer' }, h('div', { class: 'bar' }, timerBar), timerTxt) : null);
       const builder = { bug: buildBug, ordre: buildOrdre, assoc: buildAssoc }[item.type];
       const body = builder(ctx);
+      ctx.footer.appendChild(h('button', { class: 'btn ghost', onclick: giveUp }, '💡 Solution (Espace)'));
       const card = h('div', { class: 'room-card' }, head, item.ctx ? h('p', { class: 'ctx' }, item.ctx) : null, h('p', { class: 'room-q' }, item.q), ctx.hint, body, ctx.footer);
       root.innerHTML = ''; root.appendChild(card); root.classList.add('open'); root.scrollTop = 0;
       current = ctx;
@@ -197,6 +199,12 @@ window.MiniGames = (function () {
         tick(); ctx.timer = setInterval(tick, 100);
       }
     });
+  }
+  // Le joueur demande la solution : la salle se termine comme un échec mais signalé « revealed »
+  // (pas de vie perdue hors boss), avec la correction affichée.
+  function giveUp() {
+    if (!current || current.done) return;
+    current.gaveUp = true; current.onTimeout();
   }
   function abort() {
     if (!current) return;
@@ -218,5 +226,5 @@ window.MiniGames = (function () {
     return h('div');
   }
 
-  return { run, abort, solutionNode, isOpen: () => !!current };
+  return { run, abort, giveUp, solutionNode, isOpen: () => !!current };
 })();

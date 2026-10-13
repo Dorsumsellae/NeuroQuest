@@ -97,7 +97,7 @@ window.UI = (function () {
         h('button', { class: 'btn', onclick: () => UIViews.pass() }, '🎖 Pass de combat'),
         h('button', { class: 'btn', onclick: () => UIViews.leaderboard() }, '🏆 Classement'),
         h('button', { class: 'btn', onclick: () => UIViews.options() }, '⚙ Options')),
-      h('p', { class: 'keys' }, '← → ou A/D (Q) pour changer de couloir · ↑ ou W/Z maintenu pour accélérer · Espace pour continuer · Échap pour fermer')));
+      h('p', { class: 'keys' }, '← → ou A/D (Q) : changer de couloir · Espace : pause et solution · ↑ ou W/Z : passer (maintenu : accélérer) · Échap : fermer')));
     menu.classList.add('open'); $('hud').hidden = true; $('pads').hidden = true;
   }
   function hideMenu() { $('menu').classList.remove('open'); }
@@ -118,6 +118,7 @@ window.UI = (function () {
     const code = $('qcode');
     code.textContent = d && d.code ? d.code : '';
     code.style.display = d && d.code ? '' : 'none';
+    $('sol').hidden = !d;
     const opts = $('opts'); opts.innerHTML = '';
     if (d && d.chips) d.chips.forEach((c, i) => opts.appendChild(h('button', {
       class: 'chip', style: 'border-color:' + c.color, onclick: () => Runner.setLane(i)
@@ -140,7 +141,7 @@ window.UI = (function () {
       if (d.why) parts.push(h('p', { class: 'why' }, h('b', null, 'Explication : '), d.why));
       if (d.whyNot) parts.push(h('p', { class: 'whynot' }, h('b', null, 'Pourquoi les autres sont faux : '), d.whyNot));
       (d.extra || []).forEach((t) => parts.push(h('p', { class: 'extra' }, t)));
-      const go = h('button', { class: 'btn primary', id: 'go', onclick: continueFeedback }, 'Continuer ▶');
+      const go = h('button', { class: 'btn primary', id: 'go', onclick: continueFeedback }, 'Continuer ▶ (↑)');
       const box = h('div', { class: 'fb-box ' + (d.ok ? 'ok' : 'ko') }, parts,
         h('div', { class: 'row' },
           d.item ? h('button', { class: 'btn', onclick: () => UICodex.open({ notionId: d.item.notions[0], resume: true }) }, '📖 Réviser dans le Codex') : null,
@@ -157,11 +158,11 @@ window.UI = (function () {
     const total = +NQ.store.profile.autoContinue || 0;
     if (!total) return;
     let left = total;
-    const label = () => { btn.textContent = 'Continuer ▶ (' + Math.ceil(left) + ' s)'; };
+    const label = () => { btn.textContent = 'Continuer ▶ (↑ · ' + Math.ceil(left) + ' s)'; };
     label();
     autoTimer = setInterval(() => {
       if (!fbResolve) { stopAutoContinue(); return; }
-      if (stack.length) { left = total; btn.textContent = 'Continuer ▶'; return; } // en pause
+      if (stack.length) { left = total; btn.textContent = 'Continuer ▶ (↑)'; return; } // en pause
       left -= 0.25; label();
       if (left <= 0) { stopAutoContinue(); continueFeedback(); }
     }, 250);

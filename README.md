@@ -45,6 +45,11 @@ La vitesse augmente à chaque bonne réponse jusqu'au plafond du niveau.
 - **Remise en ordre** : glisser les lignes par la poignée ⠿ (souris ou doigt) ou utiliser ▲ ▼, puis Valider.
 - **Association** : toucher un terme puis sa définition pour les relier, puis Valider.
 
+### Apprendre avant d'être interrogé
+
+- **Micro-leçon** : la première fois qu'une notion apparaît (hors boss), le jeu s'arrête sur une carte : un titre parlant, un schéma, 3 à 5 phrases simples, un exemple chiffré et une phrase à retenir. ↑ ou « C'est parti » lance la question. Les 68 notions ont leur leçon ; on peut les relire depuis la carte de maîtrise (📘) ou le Codex (📘 Leçon).
+- **Glossaire au toucher** : les termes techniques (83 termes) sont soulignés en pointillés dorés dans les questions, les salles, les explications et les leçons ; un toucher affiche leur définition en une phrase.
+
 ### Après chaque réponse
 
 Le feedback donne la bonne réponse, pourquoi elle est juste, pourquoi les autres sont fausses, et un bouton **Réviser dans le Codex** qui ouvre la section de la fiche correspondant à la notion. Le jeu reprend dès qu'on appuie sur ↑ (ou Entrée, ou le bouton), et automatiquement après 5 secondes ; ce délai se règle dans les Options (désactivé, 5 s, 10 s) et se met en pause tant que le Codex est ouvert. C'est le cœur de l'apprentissage : l'erreur mène à la fiche, la fiche mène à la prochaine réussite.
@@ -77,6 +82,10 @@ lib/marked.min.js          marked 4.3, rendu Markdown du Codex
 content/notions.js         registre des 68 notions : id, chapitre, libellé, fiche + section du Codex
 content/ch1.js … ch4.js    192 épreuves (134 choix, 24 calculs, 16 bugs, 9 ordres, 9 associations), JSON strict
 content/codex.js           fiches de révision, GÉNÉRÉ par tools/build_codex.py (ne pas éditer à la main)
+content/glossary.js        glossaire de base (les fichiers de leçons y ajoutent leurs termes)
+content/lessons*.js        68 micro-leçons (une par notion) + termes de glossaire par chapitre
+js/schemas.js              23 schémas SVG des leçons
+js/ui_lesson.js            affichage des leçons et bulles du glossaire
 js/core.js                 état, sauvegarde, tirage pondéré des épreuves, maîtrise
 js/audio.js                sons, musique procédurale, souffle d'accélération, vibrations (Web Audio)
 js/progression.js          XP, paliers, récompenses du pass, skins de boss

@@ -64,7 +64,9 @@ window.UICodex = (function () {
           h('div', { class: 'badge-info' }, h('b', null, notion.label),
             h('div', { class: 'mbar' }, h('i', { style: 'width:' + Math.round(e.m) + '%' })),
             h('small', null, NQ.masteryState(notion.id) + ' · ' + Math.round(e.m) + '/100')),
-          trainBtn));
+          h('div', { class: 'badge-btns' },
+            UILesson.hasLesson(notion.id) ? h('button', { class: 'btn small', onclick: () => UILesson.show(notion.id, { replay: true }) }, '📘 Leçon') : null,
+            trainBtn)));
       }
       content.appendChild(h('div', { html: marked.parse(sec.md || '') }));
       content.scrollTop = 0;

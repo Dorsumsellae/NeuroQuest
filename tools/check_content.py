@@ -90,6 +90,29 @@ def main() -> int:
             else:
                 errors.append(f"{qid} : type inconnu {t}")
 
+    # Micro-leçons et glossaire, lus via Node (tools/dump_lessons.js) comme dans le navigateur
+    import subprocess
+    try:
+        out = subprocess.run(["node", str(ROOT / "tools" / "dump_lessons.js")], capture_output=True, text=True, encoding="utf-8", check=True).stdout
+        data = json.loads(out)
+    except Exception as e:
+        errors.append(f"lecture des leçons impossible : {e}"); data = {"lessons": {}, "glossary": []}
+    lessons, glossary = data["lessons"], data["glossary"]
+    schemas = set(re.findall(r"^\s{4}(\w+): svg\(", (ROOT / "js" / "schemas.js").read_text(encoding="utf-8"), re.M))
+    for nid, L in lessons.items():
+        if nid not in notion_ids: errors.append(f"leçon {nid} : notion inconnue")
+        for k in ("title", "p"):
+            if not L.get(k): errors.append(f"leçon {nid} : champ {k} manquant")
+        if L.get("svg") and L["svg"] not in schemas: errors.append(f"leçon {nid} : schéma inconnu {L['svg']}")
+    for nid in sorted(notion_ids - set(lessons)):
+        warnings.append(f"notion {nid} : pas de micro-leçon")
+    seen_terms = {}
+    for g in glossary:
+        k = g["t"].lower()
+        if k in seen_terms: warnings.append(f"glossaire : terme en double « {g['t']} »")
+        seen_terms[k] = 1
+    print(f"{len(lessons)} micro-leçons, {len(schemas)} schémas, {len(glossary)} termes de glossaire")
+
     missing = sorted(notion_ids - set(covered))
     for nid in missing:
         errors.append(f"notion {nid} : aucune épreuve ne la couvre")

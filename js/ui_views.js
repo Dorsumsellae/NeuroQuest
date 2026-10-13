@@ -20,7 +20,8 @@ window.UIViews = (function () {
           h('div', { class: 'mbar' }, h('i', { class: st === 'Maîtrisée' ? 'gold' : '', style: 'width:' + Math.round(e.m) + '%' })),
           h('small', { class: 'm-state s-' + st }, st + ' · ' + Math.round(e.m)),
           h('div', { class: 'm-btns' },
-            h('button', { class: 'btn small', onclick: () => UICodex.open({ notionId: n.id }) }, '📖'),
+            UILesson.hasLesson(n.id) ? h('button', { class: 'btn small', title: 'Revoir la leçon', onclick: () => UILesson.show(n.id, { replay: true }) }, '📘') : null,
+            h('button', { class: 'btn small', title: 'Lire la fiche', onclick: () => UICodex.open({ notionId: n.id }) }, '📖'),
             h('button', { class: 'btn small primary', onclick: () => { closeModals(); UI.handlers().startFlash(n.id); } }, 'M\'entraîner'))));
       });
     });

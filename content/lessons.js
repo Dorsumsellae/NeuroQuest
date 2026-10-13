@@ -19,8 +19,8 @@ window.NQ.lessons = {
   "title": "Le neurone artificiel",
   "p": [
     "Un neurone artificiel imite très grossièrement un neurone biologique : des entrées, une somme, une sortie.",
-    "Chaque entrée xᵢ est multipliée par un poids wᵢ (la force de la connexion), on additionne, et on retranche un seuil θ : a = Σ xᵢwᵢ − θ.",
-    "Le résultat passe dans une fonction d'activation f : un échelon (0 ou 1) dans la version historique, une sigmoïde ou une ReLU aujourd'hui.",
+    "Chaque entrée xᵢ est multipliée par un poids wᵢ (la force de la connexion), on additionne, et on retranche un seuil θ : a = Σ xᵢwᵢ − θ (attention : ici θ est le seuil, pas le vecteur de paramètres de la régression).",
+    "Le résultat passe dans une fonction d'activation f : un échelon (0 ou 1) ou une sigmoïde dans la version historique, le plus souvent une ReLU aujourd'hui.",
     "Un poids positif pousse le neurone à s'activer (excitation), un poids négatif le freine (inhibition)."
   ],
   "ex": "Entrées (2, 4, 1), poids (0.5, 0.2, 0.3), seuil 0.1 : a = 1 + 0.8 + 0.3 − 0.1 = 2.0. Avec un échelon la sortie vaut 1 ; avec une sigmoïde, environ 0.88.",

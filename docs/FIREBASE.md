@@ -52,11 +52,25 @@ service cloud.firestore {
         && request.resource.data.chapter is int && request.resource.data.chapter >= 0 && request.resource.data.chapter <= 4;
       allow update, delete: if false;
     }
+    match /profiles/{id} {
+      // Sauvegardes de progression. L'identifiant est une empreinte SHA-256 de « pseudo + code à 4 chiffres » :
+      // on peut lire ou écrire un document seulement si on connaît son identifiant (donc le code),
+      // et personne ne peut lister la collection.
+      allow get: if id.matches('^[0-9a-f]{12,64}$');
+      allow list, delete: if false;
+      allow create, update: if id.matches('^[0-9a-f]{12,64}$')
+        && request.resource.data.keys().hasOnly(['name', 'data', 'updatedAt'])
+        && request.resource.data.name is string && request.resource.data.name.size() <= 20
+        && request.resource.data.data is string && request.resource.data.data.size() < 100000
+        && request.resource.data.updatedAt is int;
+    }
   }
 }
 ```
 
 Publier les règles.
+
+Limite à connaître : un code à 4 chiffres protège contre les erreurs et les curieux, pas contre quelqu'un qui essaierait systématiquement les 10 000 codes d'un pseudo. C'est adapté à un jeu de révision ; il n'y a aucune donnée sensible dans une sauvegarde (XP, maîtrise des notions, réglages).
 
 ## 4. Index
 

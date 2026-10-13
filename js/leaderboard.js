@@ -76,6 +76,7 @@ NQ.leaderboard = (function () {
   const withTimeout = (p, what) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error(what + ' : pas de réponse de Firestore en ' + TIMEOUT / 1000 + ' s')), TIMEOUT))]);
   return {
     isShared: () => !!cfg,
+    db, // accès Firestore partagé avec js/sync.js (sauvegarde de la progression)
     submit(entry) {
       const p = local.submit(entry);
       if (!cfg) return p;

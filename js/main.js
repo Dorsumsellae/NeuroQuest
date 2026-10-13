@@ -319,6 +319,7 @@
       } else submit();
     }
     NQ.store.save();
+    NQ.sync.flush(); // fin de partie : sauvegarde en ligne immédiate
     const before = {}; S.unlockedBefore.forEach((i) => { before[i] = true; });
     const unlocks = NQ.prog.unlockedRewards(p).filter((r) => !before[r.id]);
     const lvlNow = NQ.prog.levelFor(p.xp), startLvl = NQ.prog.levelFor(p.xp - S.xp);
@@ -430,7 +431,9 @@
     bindInputs();
     UILesson.bindGlossary();
     UI.showMenu();
-    // Premier lancement : invitation à choisir un pseudo
+    // Sauvegarde en ligne : récupère une version plus récente faite sur un autre appareil
+    NQ.sync.startup().then((r) => { if (r === 'pulled') { UI.applyEquipped(); if (!S) UI.showMenu(); } else if (!S && document.getElementById('menu').classList.contains('open')) UI.showMenu(); });
+    // Premier lancement : invitation à choisir un pseudo (et un code pour la sauvegarde en ligne)
     if (!UI.hasName()) setTimeout(() => UI.askName().then(() => UI.showMenu()), 500);
     requestAnimationFrame(loop);
   }

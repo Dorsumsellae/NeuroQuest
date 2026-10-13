@@ -162,6 +162,10 @@ Ajouter une entrée dans `content/notions.js` : `{"id":"ch.nom","ch":N,"label":"
 
 Le classement est local par défaut. Pour un classement commun à toute la promo, suivre `docs/FIREBASE.md` : créer un projet Firebase (offre gratuite, sans carte bancaire), coller sa configuration dans `js/firebase-config.js`, publier les règles Firestore fournies. Le jeu charge alors le SDK Firebase à la demande, envoie chaque score dans la collection `scores` et affiche le classement partagé ; hors ligne, il retombe sur le classement local.
 
+### Sauvegarde de la progression en ligne
+
+Au premier lancement (ou depuis le menu / les Options), le joueur choisit un **pseudo et un code à 4 chiffres**. Sa progression (XP, pass, maîtrise, campagne, boss, réglages) est alors sauvegardée dans Firestore et retrouvée sur n'importe quel appareil en retapant le même pseudo et le même code. La clé du document est une empreinte SHA-256 du pseudo et du code : sans le code, on ne peut ni lire ni écraser la sauvegarde, et le code n'est stocké nulle part. Deux joueurs au même pseudo avec des codes différents ont deux sauvegardes séparées. À chaque ouverture, la version la plus récente (appareil ou en ligne) est conservée. Règles Firestore à publier : voir `docs/FIREBASE.md` (collection `profiles`).
+
 ## 8. Jouer en ligne
 
 Le jeu est publié sur GitHub Pages : https://dorsumsellae.github.io/NeuroQuest/ (mis à jour à chaque `git push` sur `main`). La sauvegarde reste dans le navigateur de chaque joueur.

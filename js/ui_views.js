@@ -167,8 +167,18 @@ window.UIViews = (function () {
   // ---------- Options ----------
   function options() {
     const p = NQ.store.profile;
-    const name = h('input', { type: 'text', maxlength: 20, value: p.name, class: 'txt' });
-    name.addEventListener('change', () => { p.name = name.value.trim() || 'Joueur'; NQ.store.save(); });
+    // Pseudo et sauvegarde en ligne : on passe toujours par le dialogue pseudo + code
+    const S = NQ.sync, linked = S.isLinked();
+    const syncInfo = h('p', { class: 'hint' }, !S.available() ? 'Sauvegarde en ligne indisponible : la progression reste sur cet appareil (utilise Exporter / Importer).'
+      : linked ? '☁ Progression sauvegardée en ligne sous « ' + p.name + ' ». Sur un autre appareil, choisis le même pseudo et le même code pour la retrouver.'
+        : '📱 Progression enregistrée sur cet appareil seulement.');
+    const nameBox = h('div', { class: 'name-opts' },
+      h('div', { class: 'name-row' }, h('b', null, UI.hasName() ? p.name : 'Joueur anonyme')),
+      syncInfo,
+      h('div', { class: 'seg-row' },
+        h('button', { class: 'btn' + (linked ? '' : ' primary'), onclick: () => UI.askName({ title: linked ? '✏️ Changer de pseudo ou de compte' : '☁ Sauvegarder ma progression', later: 'Annuler' }).then(() => { closeModals(); UI.showMenu(); options(); }) },
+          linked ? '✏️ Changer de pseudo / compte' : (S.available() ? '☁ Sauvegarder en ligne (pseudo + code)' : '✏️ Changer de pseudo')),
+        linked ? h('button', { class: 'btn', onclick: () => UI.confirm('Déconnecter cet appareil de la sauvegarde en ligne ? La progression reste ici, et en ligne sous ton pseudo + code.', 'Déconnecter').then((yes) => { if (yes) { S.unlink(); closeModals(); UI.showMenu(); options(); } }) }, 'Déconnecter cet appareil') : null));
     const exp = h('textarea', { class: 'io', readonly: true, rows: 5 });
     const imp = h('textarea', { class: 'io', rows: 5, placeholder: 'Colle ici une sauvegarde JSON…' });
     const msg = h('p', { class: 'hint' });
@@ -210,7 +220,7 @@ window.UIViews = (function () {
     };
     renderAuto();
     UI.showFrame('⚙ Options', h('div', { class: 'opts' },
-      h('label', null, 'Nom du joueur'), name,
+      h('h3', null, 'Pseudo et sauvegarde en ligne'), nameBox,
       h('h3', null, 'Son et sensations'),
       h('p', { class: 'hint' }, 'Musique d\'ambiance synthétisée (aucun fichier), effets sonores, et vibration du téléphone en cas d\'erreur.'), soundRow,
       h('h3', null, 'Reprise automatique après une réponse'),

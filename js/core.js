@@ -45,7 +45,9 @@
     muted: false,     // effets sonores coupés
     music: true,      // musique d'ambiance
     vibrate: true,    // vibration sur mobile en cas d'erreur
-    autoContinue: 5 // secondes avant reprise automatique après un feedback (0 = désactivé)
+    autoContinue: 5, // secondes avant reprise automatique après un feedback (0 = désactivé)
+    syncId: '',      // clé de sauvegarde en ligne (dérivée du pseudo + code ; le code n'est jamais stocké)
+    updatedAt: 0     // date de la dernière modification (pour garder la version la plus récente)
   });
   // Fusionne une source (localStorage / import) dans les valeurs par défaut
   function sanitize(src) {
@@ -70,7 +72,13 @@
       store.profile = sanitize(raw);
       return store.profile;
     },
-    save() { lsSet(KEY, JSON.stringify(store.profile)); },
+    // keepTime : true quand on enregistre une version reçue du serveur (ne pas la dater de maintenant)
+    save(keepTime) {
+      if (!keepTime) store.profile.updatedAt = Date.now();
+      lsSet(KEY, JSON.stringify(store.profile));
+      if (!keepTime && NQ.sync) NQ.sync.schedule();
+    },
+    replace(obj) { store.profile = sanitize(obj); store.save(true); },
     exportJSON() { return JSON.stringify(store.profile, null, 2); },
     importJSON(str) {
       const o = JSON.parse(str); // peut lever une exception : gérée par l'appelant

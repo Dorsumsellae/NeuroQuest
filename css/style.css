@@ -1131,3 +1131,11 @@ body.boost #stage::after { opacity: 1; animation: speedlines .25s linear infinit
 .ord-row.drag { transform: scale(1.02); position: relative; z-index: 2; }
 /* Feedback figé (Espace ou toucher) */
 .fb-box.paused { box-shadow: 0 0 0 2px var(--gold) inset; }
+
+/* ---- Sauvegarde en ligne ---- */
+.sync-line { display: block; margin-top: 4px; color: var(--mut); }
+.pin-label { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 6px 0 0; color: var(--mut); font-size: 14px; }
+.name-card .txt.pin { width: 110px; letter-spacing: 8px; font-size: 22px; margin: 0; }
+.name-card .hint.small { font-size: 12px; margin: 6px 0 0; }
+.name-card .col { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.name-card .col .btn { margin: 0; }

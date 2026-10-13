@@ -46,28 +46,70 @@ window.UI = (function () {
   // ---------- Pseudo ----------
   const DEFAULT_NAME = 'Joueur';
   const hasName = () => { const n = (NQ.store.profile.name || '').trim(); return n && n !== DEFAULT_NAME; };
-  // Dialogue de saisie du pseudo. Résout avec le nom enregistré (ou null si « Plus tard »).
+  // Dialogue de saisie du pseudo (+ code à 4 chiffres si la sauvegarde en ligne est disponible).
+  // Résout avec le nom enregistré (ou null si « Plus tard »).
   function askName(opts) {
     opts = opts || {};
+    const syncOn = !!(NQ.sync && NQ.sync.available());
     return new Promise((resolve) => {
       const dlg = $('dlg'), p = NQ.store.profile;
       const input = h('input', { type: 'text', class: 'txt', maxlength: '20', placeholder: 'Ton pseudo (ex. Maxence)', value: hasName() ? p.name : '' });
+      const pin = h('input', { type: 'password', class: 'txt pin', inputmode: 'numeric', maxlength: '4', autocomplete: 'off', placeholder: '••••' });
+      pin.addEventListener('input', () => { pin.value = pin.value.replace(/\D/g, '').slice(0, 4); });
       const err = h('p', { class: 'hint' });
+      const body = h('div');
+      let busy = false;
       const done = (v) => { dlg.classList.remove('open'); dlg.innerHTML = ''; resolve(v); };
+      // Choix quand une sauvegarde en ligne existe déjà et que cet appareil a aussi une progression
+      const chooser = (name, id, remote) => {
+        const rp = remote.profile || {}, lvl = NQ.prog.levelFor(rp.xp || 0), when = remote.updatedAt ? new Date(remote.updatedAt).toLocaleString('fr-FR') : '?';
+        const here = NQ.prog.levelFor(p.xp || 0);
+        body.innerHTML = '';
+        body.appendChild(h('div', null,
+          h('p', null, '☁ Une sauvegarde existe pour « ' + name + ' » : palier ' + lvl + ', ' + (rp.xp || 0) + ' XP, ' + Object.keys(rp.campaign || {}).length + ' étapes de campagne (mise à jour le ' + when + ').'),
+          h('p', { class: 'hint' }, 'Cet appareil : palier ' + here + ', ' + (p.xp || 0) + ' XP.'),
+          h('div', { class: 'col' },
+            h('button', { class: 'btn primary', onclick: () => finish(name, id, remote, true) }, '☁ Charger la sauvegarde en ligne'),
+            h('button', { class: 'btn', onclick: () => finish(name, id, remote, false) }, '📱 Garder la progression de cet appareil (remplace la sauvegarde en ligne)'))));
+      };
+      const finish = (name, id, remote, useRemote) => {
+        body.innerHTML = ''; body.appendChild(h('p', null, '⏳ Synchronisation…'));
+        NQ.sync.link(name, id, remote, useRemote).then(() => { applyEquipped(); done(name); })
+          .catch((e) => { body.innerHTML = ''; body.appendChild(h('p', { class: 'hint' }, 'Synchronisation impossible (' + e.message + '). Le pseudo est gardé sur cet appareil.')); p.name = name; NQ.store.save(); setTimeout(() => done(name), 1800); });
+      };
       const save = () => {
+        if (busy) return;
         const v = input.value.trim().slice(0, 20);
         if (!v || v.toLowerCase() === DEFAULT_NAME.toLowerCase()) { err.textContent = 'Choisis un pseudo pour apparaître dans le classement.'; input.focus(); return; }
-        p.name = v; NQ.store.save(); done(v);
+        if (!syncOn) { p.name = v; NQ.store.save(); done(v); return; }
+        if (!/^\d{4}$/.test(pin.value)) { err.textContent = 'Choisis un code à 4 chiffres : il protège ta progression.'; pin.focus(); return; }
+        busy = true; err.textContent = '⏳ Recherche de ta sauvegarde…';
+        NQ.sync.lookup(v, pin.value).then(({ id, remote }) => {
+          busy = false;
+          const localEmpty = !(p.xp > 0) && !Object.keys(p.campaign || {}).length;
+          if (!remote) { err.textContent = ''; finish(v, id, null, false); }          // nouvelle sauvegarde
+          else if (localEmpty || p.syncId === id) finish(v, id, remote, (remote.updatedAt || 0) >= (p.updatedAt || 0));
+          else { err.textContent = ''; chooser(v, id, remote); }
+        }).catch((e) => {
+          busy = false;
+          err.textContent = 'Sauvegarde en ligne injoignable (' + e.message + '). ';
+          err.appendChild(h('button', { class: 'btn small', onclick: () => { p.name = v; NQ.store.save(); done(v); } }, 'Garder le pseudo sur cet appareil'));
+        });
       };
-      input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); save(); } });
-      dlg.innerHTML = '';
-      dlg.appendChild(h('div', { class: 'dlg-card name-card' },
-        h('h2', null, opts.title || '👋 Bienvenue dans NeuroQuest'),
-        h('p', null, opts.msg || 'Choisis ton pseudo : il apparaîtra dans le classement partagé avec toute la promo.'),
-        input, err,
+      [input, pin].forEach((el) => el.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); save(); } }));
+      body.appendChild(h('div', null,
+        input,
+        syncOn ? h('label', { class: 'pin-label' }, 'Code à 4 chiffres', pin) : null,
+        syncOn ? h('p', { class: 'hint small' }, 'Pseudo + code = ta sauvegarde en ligne. Retape les mêmes sur un autre appareil pour retrouver ta progression. Ne l\'oublie pas : il n\'est stocké nulle part.') : null,
+        err,
         h('div', { class: 'row' },
           h('button', { class: 'btn', onclick: () => done(null) }, opts.later || 'Plus tard'),
           h('button', { class: 'btn primary', onclick: save }, 'Valider'))));
+      dlg.innerHTML = '';
+      dlg.appendChild(h('div', { class: 'dlg-card name-card' },
+        h('h2', null, opts.title || '👋 Bienvenue dans NeuroQuest'),
+        h('p', null, opts.msg || (syncOn ? 'Choisis ton pseudo et un code : ta progression sera sauvegardée en ligne et tu apparaîtras dans le classement de la promo.' : 'Choisis ton pseudo : il apparaîtra dans le classement partagé avec toute la promo.')),
+        body));
       dlg.classList.add('open');
       dlg._cancel = () => done(null);
       setTimeout(() => input.focus(), 50);
@@ -117,8 +159,11 @@ window.UI = (function () {
       h('div', { class: 'profile-card' },
         h('div', { class: 'name-row' },
           h('b', null, hasName() ? p.name : 'Joueur anonyme'), titleOf(p) ? h('em', null, ' · ' + titleOf(p)) : null,
-          h('button', { class: 'btn small name-edit' + (hasName() ? '' : ' pulse'), onclick: () => askName({ title: '✏️ Changer de pseudo', msg: 'Ton pseudo apparaît dans le classement partagé.', later: 'Annuler' }).then(() => showMenu()) },
-            hasName() ? '✏️ Modifier' : '✏️ Choisir mon pseudo')),
+          h('button', { class: 'btn small name-edit' + (hasName() && (!NQ.sync.available() || NQ.sync.isLinked()) ? '' : ' pulse'), onclick: () => askName({ title: NQ.sync.isLinked() ? '✏️ Changer de pseudo' : '☁ Sauvegarder ma progression', msg: NQ.sync.available() ? 'Pseudo + code à 4 chiffres : ta progression est sauvegardée en ligne et tu la retrouves sur n\'importe quel appareil.' : 'Ton pseudo apparaît dans le classement partagé.', later: 'Annuler' }).then(() => showMenu()) },
+            !hasName() ? '✏️ Choisir mon pseudo' : NQ.sync.available() && !NQ.sync.isLinked() ? '☁ Sauvegarder en ligne' : '✏️ Modifier')),
+        NQ.sync.available() ? h('small', { class: 'sync-line' }, NQ.sync.isLinked()
+          ? (NQ.sync.status() === 'error' ? '⚠ Sauvegarde en ligne injoignable : progression gardée sur cet appareil' : '☁ Progression sauvegardée en ligne')
+          : '📱 Progression enregistrée sur cet appareil seulement') : null,
         h('div', { class: 'xpbar' }, h('i', { style: 'width:' + pr.pct + '%' })),
         h('small', null, 'Palier ' + pr.level + '/' + NQ.prog.TIERS + (pr.max ? ' (max)' : ' · ' + pr.into + '/' + pr.need + ' XP') +
           ' · Collection : ' + seen + '/' + NQ.notions.length + ' notions · Record ' + p.stats.best)),
